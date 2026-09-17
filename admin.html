@@ -31,7 +31,6 @@
     .status-sukses{color:#16a34a; font-weight:bold;}
     .tanggal{color:#888; font-size:12px; margin-top:4px;}
     .loading{text-align:center; padding:30px; color:#666;}
-    .real-time-note{font-size:12px; color:#16a34a; margin-bottom:10px;}
   </style>
 </head>
 <body>
@@ -48,8 +47,7 @@
 
 <div id="halAdmin" class="sembunyi">
   <h2 style="text-align:left; margin-bottom:10px;">Panel Admin</h2>
-  <p style="color:#666; margin-bottom:10px;">Selamat datang, <span id="namaAdmin">Admin</span></p>
-  <p class="real-time-note">🔄 Data diperbarui otomatis setiap 5 detik</p>
+  <p style="color:#666; margin-bottom:15px;">Selamat datang, <span id="namaAdmin">Admin</span></p>
 
   <div class="menu">
     <button class="aktif" onclick="tambahTransaksi()">➕ Transaksi</button>
@@ -68,35 +66,18 @@
 const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbxxXb8f3OsHdivoo8iGMpN7ns48PaL9mu4dkWp7QI2CzpONaiqnzxbX-tYs3SWfh3EWbw/exec";
 let userAdmin = localStorage.getItem("userAdmin");
 let passAdmin = localStorage.getItem("passAdmin");
-let menuAktif = 0;
-let autoRefresh = null;
 
 if (userAdmin && passAdmin) cekAdminLangsung();
-
-// === AUTO REFRESH REAL-TIME ===
-function mulaiAutoRefresh() {
-  if (autoRefresh) clearInterval(autoRefresh);
-  autoRefresh = setInterval(() => {
-    switch(menuAktif) {
-      case 1: daftarTransaksi(); break;
-      case 2: daftarPenarikan(); break;
-      case 4: daftarAfiliator(); break;
-    }
-  }, 5000); // Perbarui setiap 5 detik
-}
-
-function setMenu(idx) {
-  menuAktif = idx;
-  document.querySelectorAll(".menu button").forEach((b, i) => b.classList.toggle("aktif", i === idx));
-  mulaiAutoRefresh();
-}
 
 function login() {
   const u = document.getElementById("username").value.trim();
   const p = document.getElementById("password").value.trim();
   const pesan = document.getElementById("pesanLogin");
-  if (!u || !p) return pesan.className = "pesan gagal", pesan.textContent = "Isi semua kolom";
-  
+  if (!u || !p) {
+    pesan.className = "pesan gagal";
+    pesan.textContent = "Isi semua kolom";
+    return;
+  }
   pesan.textContent = "Memproses...";
   fetch(URL_APPSCRIPT + "?aksi=login&user=" + encodeURIComponent(u) + "&pass=" + encodeURIComponent(p))
     .then(r => r.json())
@@ -114,7 +95,10 @@ function login() {
         pesan.textContent = res.sukses ? "Bukan akun admin" : res.pesan;
       }
     })
-    .catch(() => pesan.className = "pesan gagal", pesan.textContent = "Koneksi gagal");
+    .catch(() => {
+      pesan.className = "pesan gagal";
+      pesan.textContent = "Koneksi gagal";
+    });
 }
 
 function cekAdminLangsung() {
@@ -126,14 +110,14 @@ function cekAdminLangsung() {
         document.getElementById("halLogin").classList.add("sembunyi");
         document.getElementById("halAdmin").classList.remove("sembunyi");
         tambahTransaksi();
-      } else keluar();
+      } else {
+        keluar();
+      }
     });
 }
 
-// === FITUR BARU: TAMBAH PENARIKAN MANUAL ===
 function tambahPenarikanManual() {
-  setMenu(99); // Nonaktifkan auto-refresh untuk form input
-  if (autoRefresh) clearInterval(autoRefresh);
+  setMenu(0);
   document.getElementById("konten").innerHTML = `
     <h3>Tambah Penarikan Manual</h3>
     <input type="text" id="idAfiliasiTarik" placeholder="ID Afiliasi (contoh: AF001)">
@@ -154,22 +138,24 @@ function kirimPenarikanManual() {
     return;
   }
   
-  fetch(URL_APPSCRIPT + "?aksi=tambahPenarikanManual&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + 
-        "&idAfiliasi=" + encodeURIComponent(idA) + "&nominal=" + nominal)
+  fetch(URL_APPSCRIPT + "?aksi=tambahPenarikanManual&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + "&idAfiliasi=" + encodeURIComponent(idA) + "&nominal=" + nominal)
     .then(r => r.json())
     .then(res => {
       pesan.className = res.sukses ? "pesan berhasil" : "pesan gagal";
-      pesan.textContent = res.pesan + (res.sukses ? ` | ID Tarik: ${res.idTarik}` : "");
+      pesan.textContent = res.pesan + (res.sukses ? " | ID Tarik: " + res.idTarik : "");
       if (res.sukses) {
         document.getElementById("idAfiliasiTarik").value = "";
         document.getElementById("nominalTarikManual").value = "";
       }
+    })
+    .catch(() => {
+      pesan.className = "pesan gagal";
+      pesan.textContent = "Koneksi gagal, coba lagi";
     });
 }
 
 function tambahTransaksi() {
-  setMenu(99);
-  if (autoRefresh) clearInterval(autoRefresh);
+  setMenu(0);
   document.getElementById("konten").innerHTML = `
     <h3>Tambah Transaksi Baru</h3>
     <input type="text" id="idAfiliasi" placeholder="ID Afiliasi (contoh: AF001)">
@@ -194,9 +180,7 @@ function kirimTransaksi() {
     return;
   }
   
-  fetch(URL_APPSCRIPT + "?aksi=tambahTransaksi&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + 
-        "&idAfiliasi=" + encodeURIComponent(idA) + "&pembeli=" + encodeURIComponent(pembeli) + 
-        "&produk=" + encodeURIComponent(produk) + "&komisi=" + komisi)
+  fetch(URL_APPSCRIPT + "?aksi=tambahTransaksi&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + "&idAfiliasi=" + encodeURIComponent(idA) + "&pembeli=" + encodeURIComponent(pembeli) + "&produk=" + encodeURIComponent(produk) + "&komisi=" + komisi)
     .then(r => r.json())
     .then(res => {
       pesan.className = res.sukses ? "pesan berhasil" : "pesan gagal";
@@ -207,6 +191,10 @@ function kirimTransaksi() {
         document.getElementById("namaProduk").value = "";
         document.getElementById("jmlKomisi").value = "";
       }
+    })
+    .catch(() => {
+      pesan.className = "pesan gagal";
+      pesan.textContent = "Koneksi gagal";
     });
 }
 
@@ -238,6 +226,9 @@ function daftarTransaksi() {
         });
       }
       document.getElementById("konten").innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById("konten").innerHTML = `<p style="color:red; text-align:center;">Gagal memuat data</p>`;
     });
 }
 
@@ -248,7 +239,8 @@ function verifikasi(idTrans) {
     .then(res => {
       alert(res.pesan);
       daftarTransaksi();
-    });
+    })
+    .catch(() => alert("Gagal memproses"));
 }
 
 function daftarPenarikan() {
@@ -273,13 +265,9 @@ function daftarPenarikan() {
                  <div class="status-sukses">${t.status}</div>` :
                 `<div style="margin:10px 0;">
                    <label>Nominal yang dibayarkan:</label>
-                   <input type="number" id="bayar_${t.idTarik}" placeholder="Masukkan nominal" 
-                          value="${t.nominalAjukan}" min="1000">
+                   <input type="number" id="bayar_${t.idTarik}" placeholder="Masukkan nominal" value="${t.nominalAjukan}" min="1000">
                  </div>
-                 <button class="btn-hijau" style="padding:8px; font-size:13px;" 
-                         onclick="prosesTarik('${t.idTarik}')">
-                   ✅ Simpan & Potong Saldo
-                 </button>
+                 <button class="btn-hijau" style="padding:8px; font-size:13px;" onclick="prosesTarik('${t.idTarik}')">✅ Simpan & Potong Saldo</button>
                  <div class="status-pending">${t.status}</div>`
               }
               <div class="tanggal">${t.tanggal}</div>
@@ -288,11 +276,18 @@ function daftarPenarikan() {
         });
       }
       document.getElementById("konten").innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById("konten").innerHTML = `<p style="color:red; text-align:center;">Gagal memuat data</p>`;
     });
 }
 
 function prosesTarik(idTarik) {
   const inputNominal = document.getElementById(`bayar_${idTarik}`);
+  if (!inputNominal) {
+    alert("Data tidak ditemukan, coba muat ulang");
+    return;
+  }
   const nominalDibayar = Number(inputNominal.value);
   
   if (!nominalDibayar || nominalDibayar <= 0) {
@@ -303,8 +298,7 @@ function prosesTarik(idTarik) {
   
   if (!confirm(`Proses penarikan ${idTarik}?\nNominal dibayar: Rp ${nominalDibayar.toLocaleString("id-ID")}\nSaldo akan terpotong sesuai nominal ini.`)) return;
   
-  fetch(URL_APPSCRIPT + "?aksi=prosesPenarikan&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + 
-        "&idTarik=" + encodeURIComponent(idTarik) + "&nominalDibayar=" + nominalDibayar)
+  fetch(URL_APPSCRIPT + "?aksi=prosesPenarikan&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + "&idTarik=" + encodeURIComponent(idTarik) + "&nominalDibayar=" + nominalDibayar)
     .then(r => r.json())
     .then(res => {
       if (res.sukses) {
@@ -313,12 +307,12 @@ function prosesTarik(idTarik) {
       } else {
         alert("Gagal: " + res.pesan);
       }
-    });
+    })
+    .catch(() => alert("Koneksi gagal"));
 }
 
 function tambahAfiliator() {
-  setMenu(99);
-  if (autoRefresh) clearInterval(autoRefresh);
+  setMenu(3);
   document.getElementById("konten").innerHTML = `
     <h3>Tambah Akun Afiliator Baru</h3>
     <input type="text" id="namaAfiliasi" placeholder="Nama Lengkap">
@@ -341,8 +335,7 @@ function simpanAfiliator() {
     return;
   }
   
-  fetch(URL_APPSCRIPT + "?aksi=tambahAfiliator&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + 
-        "&nama=" + encodeURIComponent(nama) + "&username=" + encodeURIComponent(user) + "&password=" + encodeURIComponent(pass))
+  fetch(URL_APPSCRIPT + "?aksi=tambahAfiliator&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + "&nama=" + encodeURIComponent(nama) + "&username=" + encodeURIComponent(user) + "&password=" + encodeURIComponent(pass))
     .then(r => r.json())
     .then(res => {
       pesan.className = res.sukses ? "pesan berhasil" : "pesan gagal";
@@ -352,6 +345,10 @@ function simpanAfiliator() {
         document.getElementById("userAfiliasi").value = "";
         document.getElementById("passAfiliasi").value = "";
       }
+    })
+    .catch(() => {
+      pesan.className = "pesan gagal";
+      pesan.textContent = "Koneksi gagal";
     });
 }
 
@@ -372,11 +369,17 @@ function daftarAfiliator() {
         `;
       });
       document.getElementById("konten").innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById("konten").innerHTML = `<p style="color:red; text-align:center;">Gagal memuat data</p>`;
     });
 }
 
+function setMenu(idx) {
+  document.querySelectorAll(".menu button").forEach((b, i) => b.classList.toggle("aktif", i === idx));
+}
+
 function keluar() {
-  if (autoRefresh) clearInterval(autoRefresh);
   localStorage.removeItem("userAdmin");
   localStorage.removeItem("passAdmin");
   userAdmin = null; passAdmin = null;
