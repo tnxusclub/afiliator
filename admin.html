@@ -50,12 +50,12 @@
   <p style="color:#666; margin-bottom:15px;">Selamat datang, <span id="namaAdmin">Admin</span></p>
 
   <div class="menu">
-    <button class="aktif" onclick="tambahTransaksi()">➕ Transaksi</button>
-    <button onclick="tambahPenarikanManual()">➕ Tarik Manual</button>
-    <button onclick="daftarTransaksi()">📋 Daftar Trans</button>
-    <button onclick="daftarPenarikan()">💰 Penarikan</button>
-    <button onclick="tambahAfiliator()">👤 Afiliator Baru</button>
-    <button onclick="daftarAfiliator()">📊 Daftar Afiliasi</button>
+    <button id="menu-0" class="aktif" onclick="tambahTransaksi()">➕ Transaksi</button>
+    <button id="menu-1" onclick="tambahPenarikanManual()">➕ Tarik Manual</button>
+    <button id="menu-2" onclick="daftarTransaksi()">📋 Daftar Trans</button>
+    <button id="menu-3" onclick="daftarPenarikan()">💰 Penarikan</button>
+    <button id="menu-4" onclick="tambahAfiliator()">👤 Afiliator Baru</button>
+    <button id="menu-5" onclick="daftarAfiliator()">📊 Daftar Afiliasi</button>
   </div>
 
   <div id="konten"></div>
@@ -68,6 +68,12 @@ let userAdmin = localStorage.getItem("userAdmin");
 let passAdmin = localStorage.getItem("passAdmin");
 
 if (userAdmin && passAdmin) cekAdminLangsung();
+
+function tandaiMenuAktif(indeks) {
+  for (let i = 0; i <= 5; i++) {
+    document.getElementById(`menu-${i}`).classList.toggle("aktif", i === indeks);
+  }
+}
 
 function login() {
   const u = document.getElementById("username").value.trim();
@@ -117,7 +123,7 @@ function cekAdminLangsung() {
 }
 
 function tambahPenarikanManual() {
-  setMenu(0);
+  tandaiMenuAktif(1);
   document.getElementById("konten").innerHTML = `
     <h3>Tambah Penarikan Manual</h3>
     <input type="text" id="idAfiliasiTarik" placeholder="ID Afiliasi (contoh: AF001)">
@@ -155,7 +161,7 @@ function kirimPenarikanManual() {
 }
 
 function tambahTransaksi() {
-  setMenu(0);
+  tandaiMenuAktif(0);
   document.getElementById("konten").innerHTML = `
     <h3>Tambah Transaksi Baru</h3>
     <input type="text" id="idAfiliasi" placeholder="ID Afiliasi (contoh: AF001)">
@@ -199,7 +205,7 @@ function kirimTransaksi() {
 }
 
 function daftarTransaksi() {
-  setMenu(1);
+  tandaiMenuAktif(2);
   document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
   fetch(URL_APPSCRIPT + "?aksi=transaksi")
     .then(r => r.json())
@@ -244,7 +250,7 @@ function verifikasi(idTrans) {
 }
 
 function daftarPenarikan() {
-  setMenu(2);
+  tandaiMenuAktif(3);
   document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
   fetch(URL_APPSCRIPT + "?aksi=penarikan")
     .then(r => r.json())
@@ -312,7 +318,7 @@ function prosesTarik(idTarik) {
 }
 
 function tambahAfiliator() {
-  setMenu(3);
+  tandaiMenuAktif(4);
   document.getElementById("konten").innerHTML = `
     <h3>Tambah Akun Afiliator Baru</h3>
     <input type="text" id="namaAfiliasi" placeholder="Nama Lengkap">
@@ -353,7 +359,7 @@ function simpanAfiliator() {
 }
 
 function daftarAfiliator() {
-  setMenu(4);
+  tandaiMenuAktif(5);
   document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
   fetch(URL_APPSCRIPT + "?aksi=saldo")
     .then(r => r.json())
@@ -373,10 +379,6 @@ function daftarAfiliator() {
     .catch(() => {
       document.getElementById("konten").innerHTML = `<p style="color:red; text-align:center;">Gagal memuat data</p>`;
     });
-}
-
-function setMenu(idx) {
-  document.querySelectorAll(".menu button").forEach((b, i) => b.classList.toggle("aktif", i === idx));
 }
 
 function keluar() {
