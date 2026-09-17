@@ -38,7 +38,6 @@
 </head>
 <body>
 
-<!-- HALAMAN LOGIN -->
 <div id="halLogin">
   <div class="container">
     <h2>🔐 Login Afiliator</h2>
@@ -49,7 +48,6 @@
   </div>
 </div>
 
-<!-- HALAMAN DASHBOARD -->
 <div id="halDashboard" class="sembunyi">
   <div class="header">
     <h3 id="namaUser">Selamat Datang</h3>
@@ -79,22 +77,19 @@
   <button class="keluar" onclick="keluar()">Keluar Akun</button>
 </div>
 
-<!-- MODAL FORM PENARIKAN -->
 <div id="modalTarik" class="modal sembunyi">
   <div class="modal-box">
     <h3>Form Penarikan Saldo</h3>
     <p><strong>ID Afiliasi:</strong> <span id="modalIdAfiliasi"></span></p>
-    <input type="number" id="jumlahTarik" placeholder="Masukkan Nominal Penarikan" min="50000">
+    <input type="number" id="jumlahTarik" placeholder="Masukkan Nominal" min="50000">
     <button onclick="kirimPenarikan()">Kirim Pengajuan</button>
     <button class="btn-batal" onclick="tutupModalTarik()">Batal</button>
   </div>
 </div>
 
 <script>
-// === UBAH INI ===
-const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbywuKQ70QoTyV-O9zZoF3ppNRFl-eEK601R_rHvQZCa7IVPAxU1w3KxrrQdtY67W1mpfA/exec";
-const NO_WA_ADMIN = "6281234567890"; // ganti nomor WA admin
-// ===============
+const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbxYYKOUTghWDx27D1OMk-asmq0Zloq7XmDPpZrlTJIg1UcLZ9hVH2tnHeYssqAP44tQTg/exec";
+const NO_WA_ADMIN = "6281234567890"; // Ganti nomor WA admin
 
 let idAfiliasi = localStorage.getItem("idAfiliasi");
 let nama = localStorage.getItem("nama");
@@ -114,8 +109,6 @@ function login() {
       if (res.sukses) {
         localStorage.setItem("idAfiliasi", res.idAfiliasi);
         localStorage.setItem("nama", res.nama);
-        localStorage.setItem("saldoTersedia", res.saldoTersedia);
-        localStorage.setItem("saldoPending", res.saldoPending);
         idAfiliasi = res.idAfiliasi; nama = res.nama;
         bukaDashboard();
       } else pesan.textContent = res.pesan;
@@ -151,13 +144,13 @@ function tampilTransaksi() {
         html = `<p style="text-align:center; color:#666; padding:30px;">Belum ada transaksi</p>`;
       } else {
         data.forEach(t => {
-          const kelasStatus = t.status.includes("Berhasil") ? "status-sukses" : "status-pending";
+          const kelas = t.status.includes("Berhasil") ? "status-sukses" : "status-pending";
           html += `
           <div class="card">
             <div><strong>${t.produk}</strong></div>
             <div>Pembeli: ${t.pembeli}</div>
             <div style="margin-top:5px;">+ Rp ${t.komisi.toLocaleString("id-ID")}</div>
-            <div class="${kelasStatus}">${t.status}</div>
+            <div class="${kelas}">${t.status}</div>
             <div class="tanggal">${t.tanggal}</div>
           </div>`;
         });
@@ -178,11 +171,18 @@ function tampilPenarikan() {
         html = `<p style="text-align:center; color:#666; padding:30px;">Belum ada riwayat penarikan</p>`;
       } else {
         data.forEach(t => {
+          let nominalTampil;
+          if (t.status.includes("Sudah Dibayar")) {
+            nominalTampil = `Dibayar: Rp ${(t.nominalDibayar||t.nominalAjukan).toLocaleString("id-ID")}`;
+          } else {
+            nominalTampil = `Diajukan: Rp ${t.nominalAjukan.toLocaleString("id-ID")}`;
+          }
+          const kelas = t.status.includes("Sudah") ? "status-sukses" : "status-pending";
           html += `
           <div class="card">
             <div><strong>ID: ${t.idTarik}</strong></div>
-            <div>Nominal: Rp ${t.jumlah.toLocaleString("id-ID")}</div>
-            <div class="status-pending">${t.status}</div>
+            <div>${nominalTampil}</div>
+            <div class="${kelas}">${t.status}</div>
             <div class="tanggal">${t.tanggal}</div>
           </div>`;
         });
@@ -204,8 +204,8 @@ function tampilAkun() {
         <p><strong>Saldo Tersedia:</strong> Rp ${res.saldoTersedia.toLocaleString("id-ID")}</p>
         <p><strong>Saldo Pending:</strong> Rp ${res.saldoPending.toLocaleString("id-ID")}</p>
         <p style="margin-top:15px; color:#666; font-size:13px;">
-          • Saldo pending akan masuk ke saldo tersedia setelah diverifikasi<br>
-          • Minimal penarikan Rp 50.000
+          • Minimal penarikan Rp 50.000<br>
+          • Saldo diproses setelah admin konfirmasi
         </p>
       </div>`;
     });
@@ -237,14 +237,12 @@ function kirimPenarikan() {
       if (res.sukses) {
         tutupModalTarik();
         muatSaldo();
-        // Kirim ke WhatsApp
         const pesanWA = `*PENARIKAN SALDO AFILIATOR*
-ID Afiliasi: ${res.idTarik}
+ID: ${res.idTarik}
 Nama: ${res.nama}
-Jumlah: Rp ${res.jumlah.toLocaleString("id-ID")}
+Ajukan: Rp ${res.jumlahAjukan.toLocaleString("id-ID")}
 Tanggal: ${res.tanggal}`;
-        const urlWA = `https://wa.me/${NO_WA_ADMIN}?text=${encodeURIComponent(pesanWA)}`;
-        window.open(urlWA, "_blank");
+        window.open(`https://wa.me/${NO_WA_ADMIN}?text=${encodeURIComponent(pesanWA)}`, "_blank");
         alert("Pengajuan berhasil! Mengarahkan ke WhatsApp...");
         tampilPenarikan();
       } else alert(res.pesan);
