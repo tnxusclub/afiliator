@@ -3,261 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aplikasi Afiliator</title>
+  <title>Dasbor Afiliasi</title>
   <style>
     *{box-sizing:border-box; font-family:Arial, sans-serif; margin:0; padding:0;}
     body{background:#f5f5f5; padding:15px;}
     .sembunyi{display:none !important;}
-    .container{max-width:420px; margin:30px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
-    h2{text-align:center; margin-bottom:25px; color:#222;}
-    input{width:100%; padding:12px; margin:8px 0 15px; border:1px solid #ddd; border-radius:8px; font-size:16px;}
-    button{width:100%; padding:14px; background:#2563eb; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer;}
+    .container{max-width:450px; margin:20px auto; background:white; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+    h2{text-align:center; margin-bottom:20px; color:#222;}
+    h3{margin:18px 0 10px; color:#333; padding-bottom:6px; border-bottom:2px solid #eee;}
+    input{width:100%; padding:12px; margin:6px 0 12px; border:1px solid #ddd; border-radius:8px; font-size:15px;}
+    button{width:100%; padding:13px; background:#2563eb; color:white; border:none; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; margin:4px 0;}
     button:hover{background:#1d4ed8;}
-    .pesan{margin-top:15px; text-align:center; color:red;}
-    .header{background:#2563eb; color:white; padding:20px; border-radius:12px; margin-bottom:20px;}
-    .saldo-row{display:flex; gap:10px; margin:10px 0;}
-    .saldo-kotak{flex:1; padding:15px; border-radius:10px; text-align:center;}
-    .tersedia{background:#16a34a;}
-    .pending{background:#f59e0b;}
-    .saldo-angka{font-size:20px; font-weight:bold; margin-top:5px;}
-    .menu{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;}
-    .menu button{flex:1; min-width:100px; padding:10px 8px; background:white; color:#222; font-size:14px;}
-    .menu button.aktif{background:#2563eb; color:white;}
-    .card{background:white; padding:15px; border-radius:10px; margin-bottom:10px; box-shadow:0 1px 5px rgba(0,0,0,0.05);}
+    .btn-hijau{background:#16a34a;}
+    .btn-hijau:hover{background:#15803d;}
+    .btn-wa{background:#25d366;}
+    .btn-wa:hover{background:#1da851;}
+    .btn-merah{background:#ef4444;}
+    .btn-merah:hover{background:#dc2626;}
+    
+    /* === NOTIFIKASI OTOMATIS === */
+    .notif{margin:12px 0; padding:12px; border-radius:8px; text-align:center; font-weight:500; opacity:0; transform:translateY(-10px); transition:all 0.3s ease;}
+    .notif.tampil{opacity:1; transform:translateY(0);}
+    .notif.berhasil{background:#dcfce7; color:#166534; border-left:4px solid #16a34a;}
+    .notif.gagal{background:#fee2e2; color:#991b1b; border-left:4px solid #ef4444;}
+    
+    .saldo-box{background:#f0fdf4; padding:15px; border-radius:10px; margin:10px 0;}
+    .saldo-utama{font-size:22px; font-weight:bold; color:#16a34a;}
+    .saldo-pending{font-size:16px; color:#d97706; margin-top:5px;}
+    .card{background:#f9fafb; padding:12px; border-radius:8px; margin-bottom:8px;}
     .status-pending{color:#d97706; font-weight:bold;}
     .status-sukses{color:#16a34a; font-weight:bold;}
-    .tanggal{color:#888; font-size:13px; margin-top:5px;}
-    .tarik-btn{background:#16a34a; margin:15px 0;}
-    .keluar{background:#ef4444; margin-top:20px;}
-    .modal{position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:20px;}
-    .modal-box{background:white; padding:25px; border-radius:12px; width:100%; max-width:380px;}
-    .modal-box h3{margin-bottom:15px;}
-    .btn-batal{background:#6b7280; margin-top:8px;}
-    .loading{text-align:center; padding:30px; color:#666;}
+    .tanggal{color:#888; font-size:12px; margin-top:4px;}
+    .info-cs{background:#eef2ff; padding:12px; border-radius:8px; margin:15px 0; text-align:center;}
   </style>
 </head>
 <body>
 
 <div id="halLogin">
   <div class="container">
-    <h2>🔐 Login Afiliator</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
+    <h2>🔐 Masuk Akun Afiliasi</h2>
+    <input type="text" id="user" placeholder="Username">
+    <input type="password" id="pass" placeholder="Password">
     <button onclick="login()">Masuk</button>
-    <div class="pesan" id="pesan"></div>
+    <div id="notifLogin" class="notif"></div>
   </div>
 </div>
 
-<div id="halDashboard" class="sembunyi">
-  <div class="header">
-    <h3 id="namaUser">Selamat Datang</h3>
-    <div class="saldo-row">
-      <div class="saldo-kotak tersedia">
-        <div>Saldo Tersedia</div>
-        <div class="saldo-angka" id="saldoTersedia">Rp 0</div>
-      </div>
-      <div class="saldo-kotak pending">
-        <div>Saldo Pending</div>
-        <div class="saldo-angka" id="saldoPending">Rp 0</div>
-      </div>
+<div id="halUtama" class="sembunyi">
+  <div class="container">
+    <h2>👋 Halo, <span id="namaPengguna"></span></h2>
+    <p style="color:#666; font-size:14px; margin-bottom:15px;">ID: <span id="idAfiliasi"></span></p>
+
+    <div class="saldo-box">
+      <div>Saldo Tersedia</div>
+      <div class="saldo-utama">Rp <span id="saldoTersedia">0</span></div>
+      <div class="saldo-pending">Saldo Pending: Rp <span id="saldoPending">0</span></div>
     </div>
-    <button class="tarik-btn" onclick="bukaModalTarik()">💰 Tarik Saldo</button>
-  </div>
 
-  <div class="menu">
-    <button class="aktif" onclick="tampilTransaksi()">Transaksi</button>
-    <button onclick="tampilPenarikan()">Penarikan</button>
-    <button onclick="tampilAkun()">Akun</button>
-  </div>
+    <h3>💰 Ajukan Penarikan</h3>
+    <input type="number" id="jumlahTarik" placeholder="Masukkan Nominal Penarikan (Rp)" min="1000">
+    <button class="btn-hijau" onclick="kirimPengajuan()">Ajukan Penarikan</button>
+    <div id="notifTarik" class="notif"></div>
 
-  <div id="konten">
-    <div class="loading">Memuat data...</div>
-  </div>
+    <div class="info-cs">
+      <p style="font-weight:bold; margin-bottom:8px;">📞 Butuh Bantuan?</p>
+      <p style="font-size:14px; color:#555; margin-bottom:10px;">Hubungi Layanan Pelanggan kami</p>
+      <a href="https://wa.me/6281234567890" target="_blank" style="text-decoration:none;">
+        <button class="btn-wa">💬 Chat WhatsApp CS</button>
+      </a>
+      <p style="font-size:12px; color:#777; margin-top:8px;">*WA hanya untuk konsultasi, pengajuan tarik saldo lewat tombol di atas</p>
+    </div>
 
-  <button class="keluar" onclick="keluar()">Keluar Akun</button>
-</div>
+    <h3>📋 Riwayat Penarikan</h3>
+    <div id="riwayatTarik"></div>
 
-<div id="modalTarik" class="modal sembunyi">
-  <div class="modal-box">
-    <h3>Form Penarikan Saldo</h3>
-    <p><strong>ID Afiliasi:</strong> <span id="modalIdAfiliasi"></span></p>
-    <input type="number" id="jumlahTarik" placeholder="Masukkan Nominal" min="50000">
-    <button onclick="kirimPenarikan()">Kirim Pengajuan</button>
-    <button class="btn-batal" onclick="tutupModalTarik()">Batal</button>
+    <h3>🛒 Riwayat Komisi</h3>
+    <div id="riwayatTrans"></div>
+
+    <button class="btn-merah" onclick="keluar()" style="margin-top:20px;">Keluar</button>
   </div>
 </div>
 
 <script>
-const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbxxXb8f3OsHdivoo8iGMpN7ns48PaL9mu4dkWp7QI2CzpONaiqnzxbX-tYs3SWfh3EWbw/exec";
-const NO_WA_ADMIN = "6285188081275"; // Ganti nomor WA admin
+// === KONFIGURASI ===
+const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbxJ3BDNroAqtC9mF8QIjTYOoYCafUUbFAWpqGATk6AZxqcujVXi7JuVGr60_zCsXJy0Fw/exec";
+const NOMOR_WA_CS = "6281234567890"; // Ganti nomor WA CS kamu
+const LAMANYA_TAMPIL = 3000; // Muncul 3 detik lalu hilang otomatis
 
-let idAfiliasi = localStorage.getItem("idAfiliasi");
-let nama = localStorage.getItem("nama");
+let idSaya = localStorage.getItem("idAfiliasi");
+let userSaya = localStorage.getItem("userAfiliasi");
+let passSaya = localStorage.getItem("passAfiliasi");
 
-if (idAfiliasi) bukaDashboard();
+// === FUNGSI NOTIFIKASI OTOMATIS ===
+function tampilNotif(elId, pesan, sukses=true) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.classList.remove("tampil", "berhasil", "gagal");
+  el.classList.add(sukses ? "berhasil" : "gagal");
+  el.textContent = pesan;
+  setTimeout(() => el.classList.add("tampil"), 10);
+  setTimeout(() => {
+    el.classList.remove("tampil");
+    setTimeout(() => el.textContent = "", 300);
+  }, LAMANYA_TAMPIL);
+}
+
+if (idSaya && userSaya && passSaya) cekLoginOtomatis();
 
 function login() {
-  const u = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value.trim();
-  const pesan = document.getElementById("pesan");
-  if (!u || !p) return pesan.textContent = "Isi semua kolom";
-  pesan.textContent = "Memproses...";
+  const u = document.getElementById("user").value.trim();
+  const p = document.getElementById("pass").value.trim();
+  
+  if (!u || !p) {
+    tampilNotif("notifLogin", "Isi username & password terlebih dahulu", false);
+    return;
+  }
   
   fetch(URL_APPSCRIPT + "?aksi=login&user=" + encodeURIComponent(u) + "&pass=" + encodeURIComponent(p))
     .then(r => r.json())
     .then(res => {
-      if (res.sukses) {
+      if (res.sukses && !res.isAdmin) {
         localStorage.setItem("idAfiliasi", res.idAfiliasi);
-        localStorage.setItem("nama", res.nama);
-        idAfiliasi = res.idAfiliasi; nama = res.nama;
-        bukaDashboard();
-      } else pesan.textContent = res.pesan;
+        localStorage.setItem("userAfiliasi", u);
+        localStorage.setItem("passAfiliasi", p);
+        idSaya = res.idAfiliasi;
+        tampilkanData(res);
+      } else {
+        tampilNotif("notifLogin", res.isAdmin ? "Gunakan halaman admin" : res.pesan, false);
+      }
     })
-    .catch(() => pesan.textContent = "Koneksi gagal");
+    .catch(() => tampilNotif("notifLogin", "Koneksi gagal, coba lagi", false));
 }
 
-function bukaDashboard() {
+function cekLoginOtomatis() {
+  fetch(URL_APPSCRIPT + "?aksi=login&user=" + encodeURIComponent(userSaya) + "&pass=" + encodeURIComponent(passSaya))
+    .then(r => r.json())
+    .then(res => {
+      if (res.sukses && !res.isAdmin) tampilkanData(res);
+      else keluar();
+    });
+}
+
+function tampilkanData(data) {
+  document.getElementById("namaPengguna").textContent = data.nama;
+  document.getElementById("idAfiliasi").textContent = data.idAfiliasi;
+  document.getElementById("saldoTersedia").textContent = data.saldoTersedia.toLocaleString("id-ID");
+  document.getElementById("saldoPending").textContent = data.saldoPending.toLocaleString("id-ID");
+  
   document.getElementById("halLogin").classList.add("sembunyi");
-  document.getElementById("halDashboard").classList.remove("sembunyi");
-  document.getElementById("namaUser").textContent = "Halo, " + nama;
-  muatSaldo(); tampilTransaksi();
-}
-
-function muatSaldo() {
-  fetch(URL_APPSCRIPT + "?aksi=saldo&id=" + idAfiliasi)
-    .then(r => r.json())
-    .then(res => {
-      document.getElementById("saldoTersedia").textContent = "Rp " + Number(res.saldoTersedia).toLocaleString("id-ID");
-      document.getElementById("saldoPending").textContent = "Rp " + Number(res.saldoPending).toLocaleString("id-ID");
-    });
-}
-
-function tampilTransaksi() {
-  setMenu(0);
-  document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
+  document.getElementById("halUtama").classList.remove("sembunyi");
   
-  fetch(URL_APPSCRIPT + "?aksi=transaksi&id=" + idAfiliasi)
-    .then(r => r.json())
-    .then(data => {
-      let html = "";
-      if (!data || !data.length) {
-        html = `<p style="text-align:center; color:#666; padding:30px;">Belum ada transaksi</p>`;
-      } else {
-        data.forEach(t => {
-          const kelas = t.status.includes("Berhasil") ? "status-sukses" : "status-pending";
-          html += `
-          <div class="card">
-            <div><strong>${t.produk}</strong></div>
-            <div>Pembeli: ${t.pembeli}</div>
-            <div style="margin-top:5px;">+ Rp ${t.komisi.toLocaleString("id-ID")}</div>
-            <div class="${kelas}">${t.status}</div>
-            <div class="tanggal">${t.tanggal}</div>
-          </div>`;
-        });
-      }
-      document.getElementById("konten").innerHTML = html;
-    });
+  muatRiwayatTarik();
+  muatRiwayatTransaksi();
 }
 
-function tampilPenarikan() {
-  setMenu(1);
-  document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
-  
-  fetch(URL_APPSCRIPT + "?aksi=penarikan&id=" + idAfiliasi)
-    .then(r => r.json())
-    .then(data => {
-      let html = "";
-      if (!data || !data.length) {
-        html = `<p style="text-align:center; color:#666; padding:30px;">Belum ada riwayat penarikan</p>`;
-      } else {
-        data.forEach(t => {
-          let nominalTampil;
-          if (t.status.includes("Sudah Dibayar")) {
-            nominalTampil = `Dibayar: Rp ${(t.nominalDibayar||t.nominalAjukan).toLocaleString("id-ID")}`;
-          } else {
-            nominalTampil = `Diajukan: Rp ${t.nominalAjukan.toLocaleString("id-ID")}`;
-          }
-          const kelas = t.status.includes("Sudah") ? "status-sukses" : "status-pending";
-          html += `
-          <div class="card">
-            <div><strong>ID: ${t.idTarik}</strong></div>
-            <div>${nominalTampil}</div>
-            <div class="${kelas}">${t.status}</div>
-            <div class="tanggal">${t.tanggal}</div>
-          </div>`;
-        });
-      }
-      document.getElementById("konten").innerHTML = html;
-    });
-}
-
-function tampilAkun() {
-  setMenu(2);
-  fetch(URL_APPSCRIPT + "?aksi=saldo&id=" + idAfiliasi)
-    .then(r => r.json())
-    .then(res => {
-      document.getElementById("konten").innerHTML = `
-      <div class="card">
-        <h4 style="margin-bottom:12px;">Informasi Akun</h4>
-        <p><strong>ID Afiliasi:</strong> ${idAfiliasi}</p>
-        <p><strong>Nama:</strong> ${nama}</p>
-        <p><strong>Saldo Tersedia:</strong> Rp ${res.saldoTersedia.toLocaleString("id-ID")}</p>
-        <p><strong>Saldo Pending:</strong> Rp ${res.saldoPending.toLocaleString("id-ID")}</p>
-        <p style="margin-top:15px; color:#666; font-size:13px;">
-          • Minimal penarikan Rp 50.000<br>
-          • Saldo diproses setelah admin konfirmasi
-        </p>
-      </div>`;
-    });
-}
-
-function setMenu(i) {
-  document.querySelectorAll(".menu button").forEach((b, idx) => b.classList.toggle("aktif", idx === i));
-}
-
-function bukaModalTarik() {
-  document.getElementById("modalTarik").classList.remove("sembunyi");
-  document.getElementById("modalIdAfiliasi").textContent = idAfiliasi;
-  document.getElementById("jumlahTarik").value = "";
-}
-
-function tutupModalTarik() {
-  document.getElementById("modalTarik").classList.add("sembunyi");
-}
-
-function kirimPenarikan() {
+function kirimPengajuan() {
   const jumlah = Number(document.getElementById("jumlahTarik").value);
-  if (!jumlah || jumlah < 50000) return alert("Minimal penarikan Rp 50.000");
   
-  if (!confirm("Ajukan penarikan Rp " + jumlah.toLocaleString("id-ID") + "?")) return;
+  if (!jumlah || jumlah < 1000) {
+    tampilNotif("notifTarik", "Masukkan nominal minimal Rp 1.000", false);
+    return;
+  }
   
-  fetch(URL_APPSCRIPT + "?aksi=ajukanTarik&id=" + idAfiliasi + "&jumlah=" + jumlah)
+  fetch(URL_APPSCRIPT + "?aksi=ajukanTarik&id=" + encodeURIComponent(idSaya) + "&jumlah=" + jumlah)
     .then(r => r.json())
     .then(res => {
       if (res.sukses) {
-        tutupModalTarik();
-        muatSaldo();
-        const pesanWA = `*PENARIKAN SALDO AFILIATOR*
-ID: ${res.idTarik}
-Nama: ${res.nama}
-Ajukan: Rp ${res.jumlahAjukan.toLocaleString("id-ID")}
-Tanggal: ${res.tanggal}`;
-        window.open(`https://wa.me/${NO_WA_ADMIN}?text=${encodeURIComponent(pesanWA)}`, "_blank");
-        alert("Pengajuan berhasil! Mengarahkan ke WhatsApp...");
-        tampilPenarikan();
-      } else alert(res.pesan);
+        tampilNotif("notifTarik", "✅ Data berhasil dikirim! ID: " + res.idTarik + " | Menunggu diproses");
+        document.getElementById("jumlahTarik").value = "";
+        setTimeout(() => {
+          cekLoginOtomatis();
+          muatRiwayatTarik();
+        }, 1000);
+      } else {
+        tampilNotif("notifTarik", res.pesan, false);
+      }
     })
-    .catch(() => alert("Gagal mengirim, coba lagi"));
+    .catch(() => tampilNotif("notifTarik", "Koneksi gagal, coba lagi", false));
+}
+
+function muatRiwayatTarik() {
+  fetch(URL_APPSCRIPT + "?aksi=penarikan&id=" + encodeURIComponent(idSaya))
+    .then(r => r.json())
+    .then(data => {
+      let html = "";
+      if (!data.length) {
+        html = "<p style='color:#888; text-align:center; padding:10px;'>Belum ada pengajuan</p>";
+      } else {
+        data.forEach(t => {
+          const kelas = t.status === "Sudah Dibayar" ? "status-sukses" : "status-pending";
+          html += `
+            <div class="card">
+              <div><strong>${t.idTarik}</strong></div>
+              <div>Diajukan: Rp ${t.nominalAjukan.toLocaleString("id-ID")}</div>
+              ${t.nominalDibayar > 0 ? `<div>Dibayar: Rp ${t.nominalDibayar.toLocaleString("id-ID")}</div>` : ""}
+              <div class="${kelas}">${t.status}</div>
+              <div class="tanggal">${t.tanggal}</div>
+            </div>
+          `;
+        });
+      }
+      document.getElementById("riwayatTarik").innerHTML = html;
+    });
+}
+
+function muatRiwayatTransaksi() {
+  fetch(URL_APPSCRIPT + "?aksi=transaksi&id=" + encodeURIComponent(idSaya))
+    .then(r => r.json())
+    .then(data => {
+      let html = "";
+      if (!data.length) {
+        html = "<p style='color:#888; text-align:center; padding:10px;'>Belum ada komisi</p>";
+      } else {
+        data.forEach(t => {
+          html += `
+            <div class="card">
+              <div><strong>${t.produk}</strong></div>
+              <div>Pembeli: ${t.pembeli}</div>
+              <div>Komisi: Rp ${t.komisi.toLocaleString("id-ID")}</div>
+              <div class="${t.status.includes("Berhasil") ? 'status-sukses' : 'status-pending'}">${t.status}</div>
+              <div class="tanggal">${t.tanggal}</div>
+            </div>
+          `;
+        });
+      }
+      document.getElementById("riwayatTrans").innerHTML = html;
+    });
 }
 
 function keluar() {
-  localStorage.clear();
-  idAfiliasi = null; nama = null;
+  localStorage.removeItem("idAfiliasi");
+  localStorage.removeItem("userAfiliasi");
+  localStorage.removeItem("passAfiliasi");
+  idSaya = userSaya = passSaya = null;
   document.getElementById("halLogin").classList.remove("sembunyi");
-  document.getElementById("halDashboard").classList.add("sembunyi");
-  document.getElementById("pesan").textContent = "";
-  document.getElementById("username").value = "";
-  document.getElementById("password").value = "";
+  document.getElementById("halUtama").classList.add("sembunyi");
+  document.getElementById("user").value = "";
+  document.getElementById("pass").value = "";
 }
 </script>
 </body>
