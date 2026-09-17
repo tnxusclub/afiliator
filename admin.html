@@ -11,7 +11,7 @@
     .container{max-width:450px; margin:30px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
     h2{text-align:center; margin-bottom:25px; color:#222;}
     h3{margin:20px 0 12px; color:#333; padding-bottom:8px; border-bottom:2px solid #eee;}
-    input, select{width:100%; padding:12px; margin:6px 0 14px; border:1px solid #ddd; border-radius:8px; font-size:15px;}
+    input{width:100%; padding:12px; margin:6px 0 14px; border:1px solid #ddd; border-radius:8px; font-size:15px;}
     button{width:100%; padding:13px; background:#2563eb; color:white; border:none; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; margin:4px 0;}
     button:hover{background:#1d4ed8;}
     .btn-hijau{background:#16a34a;}
@@ -35,7 +35,6 @@
 </head>
 <body>
 
-<!-- LOGIN ADMIN -->
 <div id="halLogin">
   <div class="container">
     <h2>🔐 Login Admin</h2>
@@ -46,7 +45,6 @@
   </div>
 </div>
 
-<!-- DASHBOARD ADMIN -->
 <div id="halAdmin" class="sembunyi">
   <h2 style="text-align:left; margin-bottom:10px;">Panel Admin</h2>
   <p style="color:#666; margin-bottom:20px;">Selamat datang, <span id="namaAdmin">Admin</span></p>
@@ -64,8 +62,7 @@
 </div>
 
 <script>
-// === KONFIGURASI ===
-const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbywuKQ70QoTyV-O9zZoF3ppNRFl-eEK601R_rHvQZCa7IVPAxU1w3KxrrQdtY67W1mpfA/exec";
+const URL_APPSCRIPT = "https://script.google.com/macros/s/AKfycbxYYKOUTghWDx27D1OMk-asmq0Zloq7XmDPpZrlTJIg1UcLZ9hVH2tnHeYssqAP44tQTg/exec";
 let userAdmin = localStorage.getItem("userAdmin");
 let passAdmin = localStorage.getItem("passAdmin");
 
@@ -114,7 +111,6 @@ function setMenu(idx) {
   document.querySelectorAll(".menu button").forEach((b, i) => b.classList.toggle("aktif", i === idx));
 }
 
-// === TAMBAH TRANSAKSI ===
 function tambahTransaksi() {
   setMenu(0);
   document.getElementById("konten").innerHTML = `
@@ -157,7 +153,6 @@ function kirimTransaksi() {
     });
 }
 
-// === DAFTAR TRANSAKSI & VERIFIKASI ===
 function daftarTransaksi() {
   setMenu(1);
   document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
@@ -199,7 +194,6 @@ function verifikasi(idTrans) {
     });
 }
 
-// === DAFTAR PENARIKAN & PROSES ===
 function daftarPenarikan() {
   setMenu(2);
   document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
@@ -212,16 +206,26 @@ function daftarPenarikan() {
       } else {
         data.forEach(t => {
           const selesai = t.status === "Sudah Dibayar";
-          const tombol = selesai ? "" : 
-            `<button class="btn-hijau" style="padding:8px; font-size:13px; margin-top:8px;" onclick="prosesTarik('${t.idTarik}')">✅ Tandai Sudah Dibayar</button>`;
           html += `
             <div class="card">
               <div><strong>${t.idTarik} | ${t.nama}</strong></div>
               <div>ID Afiliasi: ${t.idAfiliasi}</div>
-              <div>Nominal: Rp ${t.jumlah.toLocaleString("id-ID")}</div>
-              <div class="${selesai ? 'status-sukses' : 'status-pending'}">${t.status}</div>
+              <div>Diajukan: Rp ${t.nominalAjukan.toLocaleString("id-ID")}</div>
+              ${selesai ? 
+                `<div>Dibayar: <span style="color:#16a34a; font-weight:bold;">Rp ${(t.nominalDibayar||0).toLocaleString("id-ID")}</span></div>
+                 <div class="status-sukses">${t.status}</div>` :
+                `<div style="margin:10px 0;">
+                   <label>Nominal yang dibayarkan:</label>
+                   <input type="number" id="bayar_${t.idTarik}" placeholder="Masukkan nominal" 
+                          value="${t.nominalAjukan}" min="1000">
+                 </div>
+                 <button class="btn-hijau" style="padding:8px; font-size:13px;" 
+                         onclick="prosesTarik('${t.idTarik}')">
+                   ✅ Simpan & Potong Saldo
+                 </button>
+                 <div class="status-pending">${t.status}</div>`
+              }
               <div class="tanggal">${t.tanggal}</div>
-              ${tombol}
             </div>
           `;
         });
@@ -231,16 +235,30 @@ function daftarPenarikan() {
 }
 
 function prosesTarik(idTarik) {
-  if (!confirm("Tandai " + idTarik + " sudah dibayar?")) return;
-  fetch(URL_APPSCRIPT + "?aksi=prosesPenarikan&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + "&idTarik=" + encodeURIComponent(idTarik))
+  const inputNominal = document.getElementById(`bayar_${idTarik}`);
+  const nominalDibayar = Number(inputNominal.value);
+  
+  if (!nominalDibayar || nominalDibayar <= 0) {
+    alert("Masukkan nominal pembayaran!");
+    inputNominal.focus();
+    return;
+  }
+  
+  if (!confirm(`Proses penarikan ${idTarik}?\nNominal dibayar: Rp ${nominalDibayar.toLocaleString("id-ID")}\nSaldo akan terpotong sesuai nominal ini.`)) return;
+  
+  fetch(URL_APPSCRIPT + "?aksi=prosesPenarikan&user=" + encodeURIComponent(userAdmin) + "&pass=" + encodeURIComponent(passAdmin) + 
+        "&idTarik=" + encodeURIComponent(idTarik) + "&nominalDibayar=" + nominalDibayar)
     .then(r => r.json())
     .then(res => {
-      alert(res.pesan);
-      daftarPenarikan();
+      if (res.sukses) {
+        alert(res.pesan);
+        daftarPenarikan();
+      } else {
+        alert("Gagal: " + res.pesan);
+      }
     });
 }
 
-// === TAMBAH AFILIATOR ===
 function tambahAfiliator() {
   setMenu(3);
   document.getElementById("konten").innerHTML = `
@@ -279,7 +297,6 @@ function simpanAfiliator() {
     });
 }
 
-// === DAFTAR SEMUA AFILIATOR ===
 function daftarAfiliator() {
   setMenu(4);
   document.getElementById("konten").innerHTML = `<div class="loading">Memuat...</div>`;
@@ -297,7 +314,7 @@ function daftarAfiliator() {
         `;
       });
       document.getElementById("konten").innerHTML = html;
-    });
+       });
 }
 
 function keluar() {
