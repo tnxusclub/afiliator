@@ -3,25 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Admin - Sistem Afiliasi</title>
+  <title>Panel Admin — Verifikasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          colors: { primary:'#165DFF', dark:'#1F2937', light:'#F9FAFB', admin:'#0F172A' },
+          colors: { 
+            primary:'#165DFF', success:'#00B42A', warning:'#FF7D00', danger:'#F53F3F', admin:'#0F172A' 
+          },
         }
       }
     }
   </script>
+  <style>
+    .btn-verif { @apply px-3 py-1.5 rounded-lg text-sm font-medium; }
+    .btn-aktif { @apply bg-success text-white hover:bg-success/90; }
+    .btn-batal { @apply bg-danger/10 text-danger hover:bg-danger/20; }
+    .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5; }
+    .status-badge { @apply px-2 py-0.5 rounded-full text-xs font-medium; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="bg-gray-50 min-h-screen font-sans">
   <div id="app">
     <!-- Login Admin -->
     <div id="hal-login" class="flex items-center justify-center min-h-screen bg-admin">
       <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
-        <h2 class="text-2xl font-bold text-center mb-6">🔐 Masuk Admin</h2>
+        <h2 class="text-2xl font-bold text-center mb-6">🔐 Panel Admin Verifikasi</h2>
         <input type="text" id="auser" placeholder="Username Admin" class="w-full p-3 border rounded-xl mb-3">
         <input type="password" id="apass" placeholder="Kata Sandi" class="w-full p-3 border rounded-xl mb-4">
         <button onclick="loginAdmin()" class="w-full bg-primary text-white p-3 rounded-xl font-medium hover:bg-primary/90">Masuk Panel</button>
@@ -30,86 +39,116 @@
 
     <!-- Panel Utama -->
     <div id="hal-admin" class="hidden">
-      <header class="bg-admin text-white p-4 flex justify-between items-center shadow">
-        <h1 class="font-bold text-lg">PANEL ADMIN — Sistem Afiliasi</h1>
-        <button onclick="keluar()" class="bg-red-500/20 text-red-300 px-3 py-1 rounded-lg hover:bg-red-500/30">Keluar</button>
+      <header class="bg-admin text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
+        <h1 class="font-bold text-lg">⚙️ PANEL VERIFIKASI — TNXUS CLUB</h1>
+        <button onclick="keluar()" class="bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20">Keluar</button>
       </header>
 
-      <div class="p-4 space-y-6">
+      <div class="p-4 max-w-7xl mx-auto space-y-6">
         <!-- Menu Tab -->
-        <div class="flex flex-wrap gap-2">
-          <button onclick="tab('pengguna')" class="t-btn bg-primary text-white px-4 py-2 rounded-lg">Pengguna</button>
-          <button onclick="tab('penarikan')" class="t-btn bg-gray-200 px-4 py-2 rounded-lg">Penarikan</button>
-          <button onclick="tab('transaksi')" class="t-btn bg-gray-200 px-4 py-2 rounded-lg">Transaksi</button>
-          <button onclick="tab('tambah')" class="t-btn bg-gray-200 px-4 py-2 rounded-lg">+ Tambah Transaksi</button>
+        <div class="flex flex-wrap gap-2 bg-white p-2 rounded-xl shadow-sm">
+          <button onclick="tab('transaksi')" id="tab-btn-transaksi" class="tab-btn bg-primary text-white px-4 py-2 rounded-lg font-medium">
+            <i class="fa-solid fa-money-bill-wave"></i> Verifikasi Saldo Masuk
+          </button>
+          <button onclick="tab('penarikan')" id="tab-btn-penarikan" class="tab-btn bg-gray-100 px-4 py-2 rounded-lg font-medium">
+            <i class="fa-solid fa-wallet"></i> Verifikasi Penarikan
+          </button>
+          <button onclick="tab('pengguna')" id="tab-btn-pengguna" class="tab-btn bg-gray-100 px-4 py-2 rounded-lg font-medium">
+            <i class="fa-solid fa-users"></i> Data Afiliator
+          </button>
+          <button onclick="tab('tambah')" id="tab-btn-tambah" class="tab-btn bg-gray-100 px-4 py-2 rounded-lg font-medium">
+            <i class="fa-solid fa-plus"></i> Catat Transaksi
+          </button>
         </div>
 
-        <!-- Daftar Pengguna -->
-        <div id="tab-pengguna" class="bg-white rounded-2xl shadow p-5">
-          <h3 class="font-bold text-lg mb-4">Daftar Afiliator</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="p-2 text-left">ID</th>
-                  <th class="p-2 text-left">Nama</th>
-                  <th class="p-2 text-left">No HP</th>
-                  <th class="p-2 text-left">Status</th>
-                  <th class="p-2 text-left">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="isi-pengguna"></tbody>
-            </table>
+        <!-- TAB 1: Verifikasi Saldo Masuk -->
+        <div id="tab-transaksi" class="tab-content">
+          <div class="card">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-lg">✅ Verifikasi Saldo Masuk</h3>
+              <span class="text-sm text-gray-500" id="jumlah-pending">0 menunggu</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-gray-500 border-b-2 border-gray-100">
+                    <th class="text-left p-3 font-semibold">ID Transaksi</th>
+                    <th class="text-left p-3 font-semibold">Afiliator</th>
+                    <th class="text-left p-3 font-semibold">Nominal</th>
+                    <th class="text-left p-3 font-semibold">Keterangan</th>
+                    <th class="text-left p-3 font-semibold">Tanggal</th>
+                    <th class="text-left p-3 font-semibold">Status</th>
+                    <th class="text-center p-3 font-semibold">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="isi-transaksi" class="divide-y divide-gray-50"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- Daftar Penarikan -->
-        <div id="tab-penarikan" class="hidden bg-white rounded-2xl shadow p-5">
-          <h3 class="font-bold text-lg mb-4">Permintaan Penarikan</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="p-2 text-left">ID</th>
-                  <th class="p-2 text-left">Afiliator</th>
-                  <th class="p-2 text-left">Nominal</th>
-                  <th class="p-2 text-left">Metode</th>
-                  <th class="p-2 text-left">Status</th>
-                  <th class="p-2 text-left">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="isi-penarikan"></tbody>
-            </table>
+        <!-- TAB 2: Verifikasi Penarikan -->
+        <div id="tab-penarikan" class="tab-content hidden">
+          <div class="card">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-lg">💰 Verifikasi Pengajuan Penarikan</h3>
+              <span class="text-sm text-gray-500" id="jumlah-tarik-pending">0 menunggu</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-gray-500 border-b-2 border-gray-100">
+                    <th class="text-left p-3 font-semibold">ID Penarikan</th>
+                    <th class="text-left p-3 font-semibold">Afiliator</th>
+                    <th class="text-left p-3 font-semibold">Nominal</th>
+                    <th class="text-left p-3 font-semibold">Metode</th>
+                    <th class="text-left p-3 font-semibold">No. Tujuan</th>
+                    <th class="text-left p-3 font-semibold">Tanggal</th>
+                    <th class="text-left p-3 font-semibold">Status</th>
+                    <th class="text-center p-3 font-semibold">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="isi-penarikan" class="divide-y divide-gray-50"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- Daftar Transaksi -->
-        <div id="tab-transaksi" class="hidden bg-white rounded-2xl shadow p-5">
-          <h3 class="font-bold text-lg mb-4">Riwayat Transaksi</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="p-2 text-left">ID Trans</th>
-                  <th class="p-2 text-left">Afiliator</th>
-                  <th class="p-2 text-left">Jumlah</th>
-                  <th class="p-2 text-left">Keterangan</th>
-                  <th class="p-2 text-left">Tanggal</th>
-                </tr>
-              </thead>
-              <tbody id="isi-transaksi"></tbody>
-            </table>
+        <!-- TAB 3: Data Afiliator -->
+        <div id="tab-pengguna" class="tab-content hidden">
+          <div class="card">
+            <h3 class="font-bold text-lg mb-4">👥 Daftar Afiliator</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-gray-500 border-b-2 border-gray-100">
+                    <th class="text-left p-3 font-semibold">ID</th>
+                    <th class="text-left p-3 font-semibold">Nama</th>
+                    <th class="text-left p-3 font-semibold">No HP</th>
+                    <th class="text-left p-3 font-semibold">Status</th>
+                    <th class="text-left p-3 font-semibold">Daftar</th>
+                    <th class="text-center p-3 font-semibold">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="isi-pengguna" class="divide-y divide-gray-50"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- Tambah Transaksi -->
-        <div id="tab-tambah" class="hidden bg-white rounded-2xl shadow p-5">
-          <h3 class="font-bold text-lg mb-4">Catat Transaksi / Komisi</h3>
-          <div class="space-y-3 max-w-md">
-            <input type="text" id="t-idafiliator" placeholder="ID Afiliator" class="w-full p-3 border rounded-xl">
-            <input type="number" id="t-jumlah" placeholder="Nominal Komisi (Rp)" class="w-full p-3 border rounded-xl">
-            <input type="text" id="t-keterangan" placeholder="Keterangan / Pesanan" class="w-full p-3 border rounded-xl">
-            <button onclick="simpanTransaksi()" class="w-full bg-primary text-white p-3 rounded-xl hover:bg-primary/90">Simpan Transaksi</button>
+        <!-- TAB 4: Tambah Transaksi -->
+        <div id="tab-tambah" class="tab-content hidden">
+          <div class="card max-w-lg">
+            <h3 class="font-bold text-lg mb-4">➕ Catat Transaksi Baru</h3>
+            <div class="space-y-4">
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">ID Afiliator</label>
+                <input type="text" id="t-idafiliator" placeholder="AFLXXXXXX" class="w-full p-3 border rounded-xl"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">Nominal Komisi (Rp)</label>
+                <input type="number" id="t-jumlah" class="w-full p-3 border rounded-xl"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                <input type="text" id="t-keterangan" class="w-full p-3 border rounded-xl"></div>
+              <button onclick="simpanTransaksi()" class="w-full bg-primary text-white p-3 rounded-xl font-medium hover:bg-primary/90">Simpan & Tunggu Verifikasi</button>
+            </div>
           </div>
         </div>
       </div>
@@ -117,115 +156,150 @@
   </div>
 
   <script>
-    // === KONFIGURASI ===
-    const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbzXam10TMXOO04YfwsHQHErvuQ0Wtvwx1wE9qeg9KViP_y_Vpv7n-cAcUOVEh-eI0uEGg/exec"; // Sama dengan di atas
-    const ADMIN_USER = "admin"; // Ganti username admin
-    const ADMIN_PASS = "admin123"; // Ganti sandi admin
-
-    let dataPengguna = [], dataPenarikan = [], dataTransaksi = [];
+    // === GANTI INI ===
+    const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbzOP-3QPAwBa4Du9--ZeB45Esjl3qcwAQBfZCntQmTMJ-mj-5C7a4pmysWJqHsm4YqV5w/exec";
+    const ADMIN_USER = "admin";
+    const ADMIN_PASS = "admin1234";
 
     function loginAdmin() {
-      const u = document.getElementById("auser").value;
-      const p = document.getElementById("apass").value;
-      if(u===ADMIN_USER && p===ADMIN_PASS) {
+      const u = document.getElementById("auser").value.trim();
+      const p = document.getElementById("apass").value.trim();
+      if(u === ADMIN_USER && p === ADMIN_PASS) {
         document.getElementById("hal-login").classList.add("hidden");
         document.getElementById("hal-admin").classList.remove("hidden");
         muatSemua();
-      } else alert("Akses ditolak!");
+      } else alert("❌ Username atau kata sandi salah!");
+    }
+
+    function tab(namaTab) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.getElementById(`tab-${namaTab}`).classList.remove("hidden");
+      document.querySelectorAll(".tab-btn").forEach(btn=>{
+        btn.classList.remove("bg-primary","text-white"); btn.classList.add("bg-gray-100");
+      });
+      document.getElementById(`tab-btn-${namaTab}`).classList.remove("bg-gray-100");
+      document.getElementById(`tab-btn-${namaTab}`).classList.add("bg-primary","text-white");
     }
 
     async function muatSemua() {
-      // Pengguna
-      let res = await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"daftarPengguna"})}).then(r=>r.json());
-      dataPengguna = res.data;
+      await Promise.all([muatTransaksi(), muatPenarikan(), muatPengguna()]);
+    }
+
+    async function muatTransaksi() {
+      const res = await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"daftarTransaksi"})}).then(r=>r.json());
+      let html = "", pending=0;
+      res.data.forEach(t=>{
+        const [idTrans,idAfl,jumlah,tgl,ket,status] = t;
+        const sts = status||"menunggu";
+        if(sts==="menunggu") pending++;
+        const badge = {
+          menunggu:`<span class="status-badge bg-warning/10 text-warning">⏳ Menunggu</span>`,
+          terverifikasi:`<span class="status-badge bg-success/10 text-success">✅ Terverifikasi</span>`,
+          dibatalkan:`<span class="status-badge bg-danger/10 text-danger">❌ Dibatalkan</span>`
+        }[sts];
+        const aksi = sts==="menunggu" ? `
+          <button onclick="verifikasi('${idTrans}','terverifikasi')" class="btn-verif btn-aktif">Verifikasi</button>
+          <button onclick="verifikasi('${idTrans}','dibatalkan')" class="btn-verif btn-batal ml-1">Batalkan</button>
+        `:`<span class="text-gray-400 text-xs">Selesai</span>`;
+        html += `<tr class="hover:bg-gray-50">
+          <td class="p-3 font-mono text-xs text-primary">${idTrans}</td>
+          <td class="p-3">${idAfl}</td>
+          <td class="p-3 font-semibold text-success">Rp ${Number(jumlah).toLocaleString('id-ID')}</td>
+          <td class="p-3 text-gray-600">${ket||'-'}</td>
+          <td class="p-3 text-xs text-gray-500">${new Date(tgl).toLocaleDateString('id-ID')}</td>
+          <td class="p-3">${badge}</td>
+          <td class="p-3 text-center whitespace-nowrap">${aksi}</td>
+        </tr>`;
+      });
+      document.getElementById("isi-transaksi").innerHTML = html||`<tr><td colspan="7" class="p-8 text-center text-gray-400">Belum ada data</td></tr>`;
+      document.getElementById("jumlah-pending").textContent = `${pending} menunggu verifikasi`;
+    }
+
+    async function muatPenarikan() {
+      const res = await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"daftarPenarikan"})}).then(r=>r.json());
+      let html = "", pending=0;
+      res.data.forEach(p=>{
+        const [idTarik,idAfl,nominal,metode,noTujuan,status,tgl] = p;
+        const sts = status||"menunggu";
+        if(sts==="menunggu") pending++;
+        const badge = {
+          menunggu:`<span class="status-badge bg-warning/10 text-warning">⏳ Menunggu</span>`,
+          selesai:`<span class="status-badge bg-success/10 text-success">✅ Selesai</span>`,
+          ditolak:`<span class="status-badge bg-danger/10 text-danger">❌ Ditolak</span>`
+        }[sts];
+        const aksi = sts==="menunggu" ? `
+          <button onclick="prosesTarik('${idTarik}','selesai')" class="btn-verif btn-aktif">Selesai</button>
+          <button onclick="prosesTarik('${idTarik}','ditolak')" class="btn-verif btn-batal ml-1">Tolak</button>
+        `:`<span class="text-gray-400 text-xs">Selesai</span>`;
+        html += `<tr class="hover:bg-gray-50">
+          <td class="p-3 font-mono text-xs text-primary">${idTarik}</td>
+          <td class="p-3">${idAfl}</td>
+          <td class="p-3 font-semibold text-success">Rp ${Number(nominal).toLocaleString('id-ID')}</td>
+          <td class="p-3">${metode}</td>
+          <td class="p-3 font-mono text-sm">${noTujuan}</td>
+          <td class="p-3 text-xs text-gray-500">${new Date(tgl).toLocaleDateString('id-ID')}</td>
+          <td class="p-3">${badge}</td>
+          <td class="p-3 text-center whitespace-nowrap">${aksi}</td>
+        </tr>`;
+      });
+      document.getElementById("isi-penarikan").innerHTML = html||`<tr><td colspan="8" class="p-8 text-center text-gray-400">Belum ada data</td></tr>`;
+      document.getElementById("jumlah-tarik-pending").textContent = `${pending} menunggu verifikasi`;
+    }
+
+    async function muatPengguna() {
+      const res = await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"daftarPengguna"})}).then(r=>r.json());
       let html = "";
-      dataPengguna.forEach(p=>{
-        html += `<tr class="border-t">
-          <td class="p-2 font-mono text-xs">${p[0]}</td>
-          <td class="p-2">${p[1]}</td>
-          <td class="p-2">${p[2]}</td>
-          <td class="p-2"><span class="px-2 py-1 rounded-full text-xs ${p[4]==='aktif'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700'}">${p[4]}</span></td>
-          <td class="p-2">
-            ${p[4]!=='aktif'?`<button onclick="ubahStatus('${p[0]}','aktif')" class="text-green-600 text-xs">Aktifkan</button>`:''}
-            <button onclick="ubahStatus('${p[0]}','blokir')" class="text-red-600 text-xs ml-2">Blokir</button>
+      res.data.forEach(u=>{
+        const [id,nama,nohp,pass,status,tgl] = u;
+        const aktif = status==="aktif";
+        html += `<tr class="hover:bg-gray-50">
+          <td class="p-3 font-mono text-xs text-primary">${id}</td>
+          <td class="p-3">${nama}</td>
+          <td class="p-3 text-sm">${nohp}</td>
+          <td class="p-3"><span class="status-badge ${aktif?'bg-success/10 text-success':'bg-warning/10 text-warning'}">${aktif?'✅ Aktif':'⏳ Menunggu'}</span></td>
+          <td class="p-3 text-xs text-gray-500">${new Date(tgl).toLocaleDateString('id-ID')}</td>
+          <td class="p-3 text-center">
+            ${!aktif?`<button onclick="ubahStatus('${id}','aktif')" class="btn-verif btn-aktif text-xs">Aktifkan</button>`:`<button onclick="ubahStatus('${id}','nonaktif')" class="btn-verif btn-batal text-xs">Nonaktifkan</button>`}
           </td>
         </tr>`;
       });
-      document.getElementById("isi-pengguna").innerHTML = html;
-
-      // Penarikan
-      res = await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"daftarPenarikan"})}).then(r=>r.json());
-      dataPenarikan = res.data;
-      html = "";
-      dataPenarikan.forEach(p=>{
-        html += `<tr class="border-t">
-          <td class="p-2 font-mono text-xs">${p[0]}</td>
-          <td class="p-2">${p[1]}</td>
-          <td class="p-2">Rp ${p[2]}</td>
-          <td class="p-2">${p[3]} — ${p[4]}</td>
-          <td class="p-2"><span class="px-2 py-1 rounded-full text-xs ${p[5]==='menunggu'?'bg-yellow-100 text-yellow-700':'bg-green-100 text-green-700'}">${p[5]}</span></td>
-          <td class="p-2">
-            ${p[5]==='menunggu'?`<button onclick="prosesTarik('${p[0]}','selesai')" class="text-green-600 text-xs">Selesai</button>
-            <button onclick="prosesTarik('${p[0]}','ditolak')" class="text-red-600 text-xs ml-1">Tolak</button>`:'Selesai'}
-          </td>
-        </tr>`;
-      });
-      document.getElementById("isi-penarikan").innerHTML = html;
-
-      // Transaksi
-      res = await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"daftarTransaksi"})}).then(r=>r.json());
-      dataTransaksi = res.data;
-      html = "";
-      dataTransaksi.forEach(p=>{
-        html += `<tr class="border-t">
-          <td class="p-2 font-mono text-xs">${p[0]}</td>
-          <td class="p-2">${p[1]}</td>
-          <td class="p-2">Rp ${p[2]}</td>
-          <td class="p-2">${p[4]||'-'}</td>
-          <td class="p-2 text-xs text-gray-500">${new Date(p[3]).toLocaleDateString('id-ID')}</td>
-        </tr>`;
-      });
-      document.getElementById("isi-transaksi").innerHTML = html;
+      document.getElementById("isi-pengguna").innerHTML = html||`<tr><td colspan="6" class="p-8 text-center text-gray-400">Belum ada afiliator</td></tr>`;
     }
 
-    function tab(nama) {
-      ["pengguna","penarikan","transaksi","tambah"].forEach(t=>{
-        document.getElementById(`tab-${t}`).classList.toggle("hidden", t!==nama);
-      });
-      document.querySelectorAll(".t-btn").forEach(b=>{
-        b.classList.remove("bg-primary","text-white");
-        b.classList.add("bg-gray-200");
-      });
-      event.target.classList.add("bg-primary","text-white");
-      event.target.classList.remove("bg-gray-200");
-    }
-
-    async function ubahStatus(id, status) {
-      alert(`Status akun ${id} diubah menjadi ${status}`);
-      muatSemua();
+    async function verifikasi(idTrans, status) {
+      if(!confirm(status==="terverifikasi"?"✅ Verifikasi saldo masuk?":"❌ Batalkan transaksi?")) return;
+      await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"verifikasiSaldo", idTrans, status})});
+      await muatTransaksi();
+      alert(status==="terverifikasi"?"✅ Saldo diverifikasi!":"❌ Transaksi dibatalkan.");
     }
 
     async function prosesTarik(idTarik, status) {
-      await fetch(DEPLOY_URL, {
-        method:"POST",
-        body:new URLSearchParams({action:"updateStatusTarik", idTarik, status})
-      });
-      muatSemua();
+      if(!confirm(status==="selesai"?"✅ Tandai sudah dibayarkan?":"❌ Tolak penarikan?")) return;
+      await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"verifikasiPenarikan", idTarik, status})});
+      await muatPenarikan();
+      alert(status==="selesai"?"✅ Ditandai sudah dibayarkan!":"❌ Penarikan ditolak.");
+    }
+
+    async function ubahStatus(id, status) {
+      await fetch(DEPLOY_URL, {method:"POST", body:new URLSearchParams({action:"ubahStatusAkun", id, status})});
+      await muatPengguna();
     }
 
     async function simpanTransaksi() {
-      const idAfiliator = document.getElementById("t-idafiliator").value.trim();
+      const idAfl = document.getElementById("t-idafiliator").value.trim();
       const jumlah = document.getElementById("t-jumlah").value;
       const ket = document.getElementById("t-keterangan").value.trim();
-      if(!idAfiliator || !jumlah) return alert("Lengkapi data!");
-
-      const idTrans = "TRS" + Math.random().toString(36).substr(2,6).toUpperCase();
-      const ss = SpreadsheetApp.getActiveSpreadsheet();
-      const sheet = ss.getSheetByName("Transaksi");
-      sheet.appendRow([idTrans, idAfiliator, jumlah, new Date(), ket]);
-      
-      alert("Transaksi tersimpan!");
-      muatSemua();
+      if(!idAfl || !jumlah) return alert("❌ Lengkapi data!");
+      const idTrans = "TRS" + Math.random().toString(36).substr(2,8).toUpperCase();
+      await fetch(DEPLOY_URL, {
+        method:"POST",
+        body:new URLSearchParams({action:"tambahTransaksi", idTrans, idAfiliator:idAfl, jumlah, keterangan:ket})
+      });
+      alert(`✅ Tersimpan! ID: ${idTrans}`);
+      document.getElementById("t-idafiliator").value="";
+      document.getElementById("t-jumlah").value="";
+      document.getElementById("t-keterangan").value="";
+      tab("transaksi"); await muatTransaksi();
     }
 
     function keluar() {
