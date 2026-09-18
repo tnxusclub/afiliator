@@ -189,7 +189,7 @@
     // ==================================================
     const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbz5FcM0SILbVtd-zHIypFXorhuuynoFv0Te3Zs4_ca6nGV9vyoHcniZ8On5SovCy9AzfQ/exec";
     const ADMIN_USER = "admin";
-    const ADMIN_PASS = "admin123"; // Ganti sandi!
+    const ADMIN_PASS = "admin123";
 
     let sesiAdmin = localStorage.getItem("tnxus_admin_sesi");
     let semuaTransaksi = [];
@@ -266,7 +266,7 @@
     }
 
     // ==================================================
-    // MUAT DATA DARI SERVER
+    // MUAT DATA
     // ==================================================
 
     async function muatSemuaData() {
@@ -285,7 +285,7 @@
         }).then(r => r.json());
         semuaTransaksi = res.data || [];
         renderDaftarSaldo();
-      } catch { notif("Gagal memuat transaksi", "error"); }
+      } catch { notif("Gagal memuat data transaksi", "error"); }
     }
 
     async function muatDaftarPenarikan() {
@@ -296,7 +296,7 @@
         }).then(r => r.json());
         semuaPenarikan = res.data || [];
         renderDaftarPenarikan();
-      } catch { notif("Gagal memuat penarikan", "error"); }
+      } catch { notif("Gagal memuat data penarikan", "error"); }
     }
 
     async function muatDaftarAfiliator() {
@@ -416,7 +416,7 @@
     }
 
     // ==================================================
-    // AKSI VERIFIKASI — SINKRON KE AFILIASI
+    // AKSI
     // ==================================================
 
     async function setujuiTransaksi(id) {
@@ -425,7 +425,6 @@
           method: "POST",
           body: new URLSearchParams({ action: "verifikasiTransaksi", idTrans: id, status: "terverifikasi" })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Disetujui! Saldo masuk ke saldo dapat ditarik", "sukses");
           muatDaftarTransaksi();
@@ -440,7 +439,6 @@
           method: "POST",
           body: new URLSearchParams({ action: "verifikasiTransaksi", idTrans: id, status: "dibatalkan" })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Ditolak! Tidak masuk saldo", "peringatan");
           muatDaftarTransaksi();
@@ -454,7 +452,6 @@
           method: "POST",
           body: new URLSearchParams({ action: "verifikasiPenarikan", idTarik: id, status: "selesai" })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Penarikan diselesaikan!", "sukses");
           muatDaftarPenarikan();
@@ -469,7 +466,6 @@
           method: "POST",
           body: new URLSearchParams({ action: "verifikasiPenarikan", idTarik: id, status: "ditolak" })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Ditolak", "peringatan");
           muatDaftarPenarikan();
@@ -483,7 +479,6 @@
           method: "POST",
           body: new URLSearchParams({ action: "ubahStatusAkun", id: id, status: "aktif" })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Akun diaktifkan!", "sukses");
           muatDaftarAfiliator();
@@ -498,7 +493,6 @@
           method: "POST",
           body: new URLSearchParams({ action: "ubahStatusAkun", id: id, status: "nonaktif" })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Akun dinonaktifkan", "peringatan");
           muatDaftarAfiliator();
@@ -526,23 +520,16 @@
             keterangan: keterangan
           })
         }).then(r => r.json());
-        
         if (res.status === "sukses") {
           notif("Transaksi dicatat! Status: Menunggu verifikasi", "sukses");
           document.getElementById("catat-id").value = "";
-                    document.getElementById("catat-id").value = "";
           document.getElementById("catat-jumlah").value = "";
           document.getElementById("catat-keterangan").value = "";
           bukaTab("saldo");
-        } else {
-          notif(res.pesan || "Gagal menyimpan", "error");
-        }
-      } catch {
-        notif("Koneksi gagal. Cek DEPLOY_URL", "error");
-      }
+        } else notif(res.pesan || "Gagal menyimpan", "error");
+      } catch { notif("Koneksi gagal. Cek DEPLOY_URL", "error"); }
     }
 
-    // Jalankan saat buka
     cekSesi();
   </script>
 </body>
