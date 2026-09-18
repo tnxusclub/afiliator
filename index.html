@@ -11,39 +11,30 @@
       theme: {
         extend: {
           colors: { primary:'#165DFF', dark:'#1F2937', light:'#F9FAFB' },
-          fontFamily: { sans:['Inter','system-ui','sans-serif'] }
         }
       }
     }
   </script>
   <style>
-    .banner { animation: slide 15s infinite; }
-    @keyframes slide {
-      0%,25% {background-position:0% 50%;}
-      33%,58% {background-position:100% 50%;}
-      66%,91% {background-position:50% 100%;}
-      100% {background-position:0% 50%;}
-    }
-    .fade { transition: opacity .3s ease; }
     .blur-bg { backdrop-filter: blur(12px); background: rgba(255,255,255,.7); }
   </style>
 </head>
 <body class="bg-gray-50 font-sans text-dark min-h-screen">
   <div id="app">
-    <!-- Halaman Login -->
+    <!-- Login -->
     <div id="hal-login" class="flex items-center justify-center min-h-screen p-4">
       <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
         <h2 class="text-2xl font-bold text-center text-primary mb-6">Masuk Akun Afiliator</h2>
         <div class="space-y-4">
           <input type="text" id="user" placeholder="ID Afiliator / No HP" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none">
           <input type="password" id="pass" placeholder="Kata Sandi" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none">
-          <button onclick="login()" class="w-full bg-primary text-white p-3 rounded-xl font-medium hover:bg-primary/90 transition">Masuk</button>
+          <button onclick="login()" class="w-full bg-primary text-white p-3 rounded-xl font-medium hover:bg-primary/90">Masuk</button>
           <p class="text-center text-gray-500">Belum punya akun? <a href="#" onclick="tampilDaftar()" class="text-primary font-medium">Daftar Akun</a></p>
         </div>
       </div>
     </div>
 
-    <!-- Form Daftar -->
+    <!-- Daftar -->
     <div id="hal-daftar" class="hidden flex items-center justify-center min-h-screen p-4">
       <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
         <h2 class="text-2xl font-bold text-center text-primary mb-6">Daftar Akun Afiliator</h2>
@@ -57,19 +48,17 @@
       </div>
     </div>
 
-    <!-- Halaman Utama Afiliator -->
+    <!-- Halaman Utama -->
     <div id="hal-utama" class="hidden">
-      <!-- Banner Slider -->
-      <div class="banner h-48 bg-cover bg-center relative overflow-hidden rounded-b-3xl shadow-lg" style="background:linear-gradient(135deg, #165DFF, #4080FF);">
-        <div class="absolute inset-0 flex items-center justify-center text-white text-xl font-bold">
-          <span id="banner-teks">Promosikan & Dapatkan Komisi Setiap Hari!</span>
-        </div>
+      <!-- Banner Geser Otomatis 5 Detik -->
+      <div class="h-48 bg-gradient-to-r from-blue-600 to-blue-400 flex items-center justify-center text-white text-xl font-bold rounded-b-3xl shadow-lg">
+        <span id="banner-teks">Promosikan & Dapatkan Komisi Setiap Hari!</span>
       </div>
 
-      <!-- Nav Tab -->
+      <!-- Navigasi -->
       <div class="sticky top-0 blur-bg border-b z-10">
         <div class="flex justify-around py-3">
-          <button onclick="bukaTab('akun')" class="tab-btn active text-primary font-medium"><i class="fa-solid fa-user"></i> Akun</button>
+          <button onclick="bukaTab('akun')" class="tab-btn text-primary font-medium"><i class="fa-solid fa-user"></i> Akun</button>
           <button onclick="bukaTab('transaksi')" class="tab-btn text-gray-500"><i class="fa-solid fa-list-check"></i> Transaksi</button>
           <button onclick="bukaTab('penarikan')" class="tab-btn text-gray-500"><i class="fa-solid fa-wallet"></i> Saldo</button>
           <button onclick="bukaTab('cs')" class="tab-btn text-gray-500"><i class="fa-solid fa-headset"></i> Bantuan</button>
@@ -113,13 +102,13 @@
         <div id="daftar-tarik" class="space-y-2"></div>
       </div>
 
-      <!-- Tab CS / Chat WA -->
+      <!-- Tab CS -->
       <div id="tab-cs" class="hidden p-4">
         <div class="bg-white rounded-2xl shadow p-5 text-center">
           <i class="fa-brands fa-whatsapp text-5xl text-green-500 mb-3"></i>
           <h3 class="font-bold text-lg">Layanan Pelanggan</h3>
-          <p class="text-gray-500 mb-4">Terhubung langsung dengan admin via WhatsApp</p>
-          <a href="#" id="link-wa" target="_blank" class="inline-block bg-green-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-600">
+          <p class="text-gray-500 mb-4">Terhubung langsung via WhatsApp</p>
+          <a id="link-wa" target="_blank" class="inline-block bg-green-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-600">
             <i class="fa-solid fa-paper-plane"></i> Mulai Chat
           </a>
         </div>
@@ -127,11 +116,11 @@
     </div>
   </div>
 
-  <!-- Popup Konfirmasi -->
+  <!-- Popup Hapus Akun -->
   <div id="popup-hapus" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
       <h3 class="text-xl font-bold text-red-600 mb-3">Hapus Akun Permanen?</h3>
-      <p class="text-gray-600 mb-5">Tindakan ini tidak dapat dibatalkan. Semua data akan hilang.</p>
+      <p class="text-gray-600 mb-5">Tindakan ini tidak dapat dibatalkan.</p>
       <div class="flex gap-3">
         <button onclick="tutupPopup()" class="flex-1 bg-gray-100 p-2 rounded-xl">Batal</button>
         <button onclick="hapusAkun()" class="flex-1 bg-red-600 text-white p-2 rounded-xl">Ya, Hapus</button>
@@ -140,19 +129,17 @@
   </div>
 
   <script>
-    // === KONFIGURASI ===
-    const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbzXam10TMXOO04YfwsHQHErvuQ0Wtvwx1wE9qeg9KViP_y_Vpv7n-cAcUOVEh-eI0uEGg/exec"; // Ganti URL-mu
-    const WA_ADMIN = "6285188081275"; // Ganti nomor WA Admin
+    // === GANTI INI ===
+    const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbzOP-3QPAwBa4Du9--ZeB45Esjl3qcwAQBfZCntQmTMJ-mj-5C7a4pmysWJqHsm4YqV5w/exec";
+    const WA_ADMIN = "6285188081275";
 
     let akun = null;
-    let bannerIdx = 0;
     const bannerTeks = [
       "Promosikan & Dapatkan Komisi Setiap Hari!",
       "Komisi Langsung Masuk Saat Transaksi Berhasil",
       "Tarik Saldo Kapan Saja Tanpa Batas Minimum"
     ];
-
-    // Banner otomatis geser setiap 5 detik
+    let bannerIdx = 0;
     setInterval(()=>{
       bannerIdx = (bannerIdx+1) % bannerTeks.length;
       document.getElementById("banner-teks").textContent = bannerTeks[bannerIdx];
@@ -198,7 +185,6 @@
 
       if(res.status==="sukses") {
         akun = res.data;
-        localStorage.setItem("afiliator_id", akun.id);
         bukaHalamanUtama();
       } else alert(res.pesan);
     }
@@ -221,18 +207,16 @@
       }).then(r=>r.json());
 
       if(res.status==="sukses") {
-        // Tampil transaksi
         let html = "";
         res.transaksi.forEach(t=>{
-          html += `<div class="bg-gray-50 p-3 rounded-xl"><p class="font-medium">Rp ${t[2]}</p><p class="text-xs text-gray-400">${new Date(t[3]).toLocaleDateString('id-ID')}</p></div>`;
+          html += `<div class="bg-gray-50 p-3 rounded-xl"><p class="font-medium">Rp ${Number(t[2]).toLocaleString('id-ID')}</p><p class="text-xs text-gray-400">${t[4]||'Transaksi'} — ${new Date(t[3]).toLocaleDateString('id-ID')}</p></div>`;
         });
-        document.getElementById("daftar-trans").innerHTML = html || "<p class='text-gray-400'>Belum ada transaksi</p>";
+        document.getElementById("daftar-trans").innerHTML = html || "<p class='text-gray-400'>Belum ada transaksi terverifikasi</p>";
 
-        // Tampil penarikan
         html = "";
         res.penarikan.forEach(t=>{
-          const st = t[5]==="menunggu" ? "text-yellow-600" : t[5]==="selesai" ? "text-green-600" : "text-red-600";
-          html += `<div class="bg-gray-50 p-3 rounded-xl"><p class="font-medium">Rp ${t[2]}</p><p class="text-xs ${st}">${t[5]}</p></div>`;
+          const st = {menunggu:"text-yellow-600", selesai:"text-green-600", ditolak:"text-red-600"}[t[5]] || "text-gray-500";
+          html += `<div class="bg-gray-50 p-3 rounded-xl"><p class="font-medium">Rp ${Number(t[2]).toLocaleString('id-ID')}</p><p class="text-xs ${st}">${t[5]}</p></div>`;
         });
         document.getElementById("daftar-tarik").innerHTML = html || "<p class='text-gray-400'>Belum ada riwayat</p>";
       }
@@ -243,10 +227,10 @@
         document.getElementById(`tab-${t}`).classList.toggle("hidden", t!==nama);
       });
       document.querySelectorAll(".tab-btn").forEach(b=>{
-        b.classList.remove("active","text-primary","font-medium");
+        b.classList.remove("text-primary","font-medium");
         b.classList.add("text-gray-500");
       });
-      event.target.classList.add("active","text-primary","font-medium");
+      event.target.classList.add("text-primary","font-medium");
       event.target.classList.remove("text-gray-500");
     }
 
@@ -264,7 +248,7 @@
       if(res.status==="sukses") {
         const pesan = `PENARIKAN SALDO%0AAfiliator: ${akun.nama} (${akun.id})%0ANominal: Rp ${nominal}%0AMetode: ${metode}%0ATujuan: ${tujuan}`;
         window.open(`https://wa.me/${WA_ADMIN}?text=${pesan}`, "_blank");
-        alert("Pengajuan terkirim! Silakan tunggu konfirmasi.");
+        alert("Pengajuan terkirim! Tunggu konfirmasi.");
         muatData();
       } else alert("Gagal mengirim!");
     }
@@ -280,27 +264,16 @@
         method:"POST",
         body:new URLSearchParams({action:"hapusAkun", id:akun.id})
       });
-      localStorage.removeItem("afiliator_id");
-      akun = null;
       tutupPopup();
-      document.getElementById("hal-utama").classList.add("hidden");
-      document.getElementById("hal-login").classList.remove("hidden");
-    }
-
-    function keluar() {
-      localStorage.removeItem("afiliator_id");
       akun = null;
       document.getElementById("hal-utama").classList.add("hidden");
       document.getElementById("hal-login").classList.remove("hidden");
     }
-
-    // Cek sesi tersimpan
-    window.onload = () => {
-      const sid = localStorage.getItem("afiliator_id");
-      if(sid) {
-        // Bisa otologin, untuk keamanan biarkan user isi ulang sandi
-      }
-    };
+    function keluar() {
+      akun = null;
+      document.getElementById("hal-utama").classList.add("hidden");
+      document.getElementById("hal-login").classList.remove("hidden");
+    }
   </script>
 </body>
 </html>
