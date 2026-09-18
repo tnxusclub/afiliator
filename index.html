@@ -6,6 +6,7 @@
   <title>Panel Afiliator - TNXUS CLUB</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -24,11 +25,23 @@
   <style>
     .blur-bg { backdrop-filter: blur(12px); background: rgba(255,255,255,.7); }
     .loading { opacity: 0.5; pointer-events: none; }
-    .saldo-card { @apply rounded-2xl p-4 shadow-sm; }
+    .banner-slide { aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
+    /* Notifikasi Muncul */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      z-index: 9999; min-width: 300px; max-width: 90%;
+      transition: transform 0.3s ease;
+    }
+    .toast.aktif { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body class="bg-gray-50 font-sans text-dark min-h-screen">
   <div id="app">
+    <!-- Notifikasi / Toast -->
+    <div id="toast" class="toast hidden">
+      <div id="toast-box" class="px-5 py-3 rounded-xl shadow-lg text-center font-medium"></div>
+    </div>
+
     <!-- Loading Indicator -->
     <div id="global-loading" class="hidden fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
       <div class="h-full bg-primary animate-pulse" style="width:60%"></div>
@@ -66,40 +79,62 @@
       <!-- Navigasi -->
       <div class="sticky top-0 blur-bg border-b z-10">
         <div class="flex justify-around py-3">
-          <button onclick="bukaTab('akun')" id="tab-btn-akun" class="tab-btn text-gray-500"><i class="fa-solid fa-user"></i> Akun</button>
-          <button onclick="bukaTab('transaksi')" id="tab-btn-transaksi" class="tab-btn text-gray-500"><i class="fa-solid fa-list-check"></i> Transaksi</button>
-          <button onclick="bukaTab('saldo')" id="tab-btn-saldo" class="tab-btn text-primary font-medium"><i class="fa-solid fa-wallet"></i> Saldo</button>
+          <button onclick="bukaTab('akun')" id="tab-btn-akun" class="tab-btn text-primary font-medium"><i class="fa-solid fa-user"></i> Akun</button>
+          <button onclick="bukaTab('transaksi')" id="tab-btn-transaksi" class="tab-btn text-gray-500"><i class="fa-solid fa-list-check"></i> Riwayat</button>
+          <button onclick="bukaTab('saldo')" id="tab-btn-saldo" class="tab-btn text-gray-500"><i class="fa-solid fa-wallet"></i> Saldo</button>
           <button onclick="bukaTab('cs')" id="tab-btn-cs" class="tab-btn text-gray-500"><i class="fa-solid fa-headset"></i> Bantuan</button>
         </div>
       </div>
 
       <!-- TAB AKUN -->
-      <div id="tab-akun" class="tab-content hidden p-4 space-y-4">
+      <div id="tab-akun" class="tab-content p-4 space-y-4">
         <div class="bg-white rounded-2xl shadow p-5">
           <h3 class="font-bold text-lg mb-3">Data Akun</h3>
           <p class="text-gray-600">ID: <span id="a-id" class="font-mono font-semibold">-</span></p>
           <p class="text-gray-600">Nama: <span id="a-nama">-</span></p>
-          <p class="text-gray-600">No HP: <span id="a-nohp">-</span></p>
+          <p class="text-gray-600">No HP: <span id="a-nohp" class="font-mono">-</span></p>
           <div class="flex gap-3 mt-4">
             <button onclick="keluar()" class="flex-1 bg-gray-100 p-2 rounded-xl hover:bg-gray-200">Keluar</button>
             <button onclick="konfirmasiHapus()" class="flex-1 bg-red-50 text-red-600 p-2 rounded-xl hover:bg-red-100">Hapus Akun</button>
           </div>
         </div>
+
+        <!-- BANNER FOTO SLIDE 16:9 -->
+        <div class="bg-white rounded-2xl shadow p-4">
+          <h3 class="font-bold text-lg mb-3">Promo & Informasi</h3>
+          <div class="relative overflow-hidden rounded-xl">
+            <img id="banner-img" class="banner-slide w-full" alt="Banner">
+            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+              <span id="dot-0" class="w-2 h-2 rounded-full bg-white"></span>
+              <span id="dot-1" class="w-2 h-2 rounded-full bg-white/40"></span>
+              <span id="dot-2" class="w-2 h-2 rounded-full bg-white/40"></span>
+            </div>
+          </div>
+          <p class="text-xs text-gray-400 mt-2 text-center" id="banner-caption">-</p>
+        </div>
       </div>
 
-      <!-- TAB TRANSAKSI -->
-      <div id="tab-transaksi" class="tab-content hidden p-4">
-        <h3 class="font-bold text-lg mb-3">Riwayat Transaksi</h3>
-        <div id="daftar-trans" class="space-y-2"></div>
+      <!-- TAB RIWAYAT (Transaksi + Grafik) -->
+      <div id="tab-transaksi" class="tab-content hidden p-4 space-y-4">
+        <div class="bg-white rounded-2xl shadow p-4">
+          <h3 class="font-bold text-lg mb-3">📊 Pendapatan Harian (7 Hari Terakhir)</h3>
+          <canvas id="grafik-harian" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-4">
+          <h3 class="font-bold text-lg mb-3">📊 Pendapatan Bulanan</h3>
+          <canvas id="grafik-bulanan" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-4">
+          <h3 class="font-bold text-lg mb-3">Riwayat Transaksi</h3>
+          <div id="daftar-trans" class="space-y-2"></div>
+        </div>
       </div>
 
-      <!-- TAB SALDO — DIPERBARUI ✅ -->
-      <div id="tab-saldo" class="tab-content p-4 space-y-4">
-        <!-- KARTU SALDO UTAMA -->
+      <!-- TAB SALDO -->
+      <div id="tab-saldo" class="tab-content hidden p-4 space-y-4">
         <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-5 rounded-2xl shadow-lg">
           <p class="text-blue-100 text-sm mb-1">Saldo Dapat Ditarik</p>
           <p class="text-3xl font-bold mb-4" id="saldo-tersedia">Rp 0</p>
-          
           <div class="grid grid-cols-2 gap-3">
             <div class="bg-white/10 rounded-xl p-3">
               <p class="text-blue-100 text-sm">Saldo Pending</p>
@@ -112,13 +147,12 @@
           </div>
         </div>
 
-        <!-- FORM PENARIKAN -->
         <div class="bg-white rounded-2xl shadow p-5 space-y-3">
           <h3 class="font-bold text-lg">Ajukan Penarikan</h3>
-          <p class="text-sm text-gray-500">Maksimal tarik: <span id="maks-tarik" class="font-bold text-success">Rp 0</span></p>
+          <p class="text-sm text-gray-500">Minimal penarikan: <span class="font-bold text-danger">Rp 50.000</span></p>
+          <p class="text-sm text-gray-500">Saldo tersedia: <span id="maks-tarik" class="font-bold text-success">Rp 0</span></p>
           
-          <input type="number" id="t-nominal" placeholder="Nominal Tarik (Rp)" class="w-full p-3 border rounded-xl">
-          
+          <input type="number" id="t-nominal" placeholder="Nominal Penarikan (Rp)" class="w-full p-3 border rounded-xl">
           <select id="t-metode" class="w-full p-3 border rounded-xl">
             <option value="">Pilih Metode Pembayaran</option>
             <option>Bank BCA</option>
@@ -129,15 +163,13 @@
             <option>GoPay</option>
             <option>ShopeePay</option>
           </select>
-          
           <input type="text" id="t-tujuan" placeholder="Nomor Rekening / No E-Wallet" class="w-full p-3 border rounded-xl">
           
           <button onclick="kirimTarik()" class="w-full bg-primary text-white p-3 rounded-xl font-medium hover:bg-primary/90">
-            <i class="fa-solid fa-paper-plane"></i> Ajukan Penarikan
+            Ajukan Penarikan
           </button>
         </div>
 
-        <!-- RIWAYAT PENARIKAN -->
         <div class="bg-white rounded-2xl shadow p-5">
           <h3 class="font-bold text-lg mb-3">Riwayat Penarikan</h3>
           <div id="daftar-tarik" class="space-y-2"></div>
@@ -149,38 +181,63 @@
         <div class="bg-white rounded-2xl shadow p-5 text-center">
           <i class="fa-brands fa-whatsapp text-5xl text-green-500 mb-3"></i>
           <h3 class="font-bold text-lg">Layanan Pelanggan</h3>
-          <p class="text-gray-500 mb-4">Terhubung langsung via WhatsApp</p>
+          <p class="text-gray-500 mb-4">Terhubung langsung melalui WhatsApp</p>
           <a id="link-wa" target="_blank" class="inline-block bg-green-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-600">
-            <i class="fa-solid fa-paper-plane"></i> Mulai Chat
+            Mulai Percakapan
           </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Popup Hapus Akun -->
-  <div id="popup-hapus" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
-      <h3 class="text-xl font-bold text-red-600 mb-3">Hapus Akun Permanen?</h3>
-      <p class="text-gray-600 mb-5">Tindakan ini tidak dapat dibatalkan.</p>
-      <div class="flex gap-3">
-        <button onclick="tutupPopup()" class="flex-1 bg-gray-100 p-2 rounded-xl">Batal</button>
-        <button onclick="hapusAkun()" class="flex-1 bg-red-600 text-white p-2 rounded-xl">Ya, Hapus</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // ==============================================
-    // === GANTI BAGIAN INI SESUAI DATA KAMU ===
+    // === KONFIGURASI ===
     // ==============================================
     const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbypjdZhoLOBXORSPArOlui8rxyOXlsfsjFbAEc6XX3YFjJPJbCdZifjMBuQt02zdjzMfg/exec";
-    const WA_ADMIN = "6285188081275"; // Ganti nomor WA admin
+    const WA_ADMIN = "6285188081275";
     const SESI_KEY = "tnxus_sesi";
-    const SESI_HARI = 30; // Tetap login 30 hari
+    const SESI_HARI = 30;
+    const MINIMAL_TARIK = 50000;
+
+    // === BANNER — Ganti URL foto kamu ===
+    const BANNER_LIST = [
+      { url: "https://i.imgur.com/placeholder1.jpg", teks: "Selamat Datang di TNXUS CLUB" },
+      { url: "https://i.imgur.com/placeholder2.jpg", teks: "Dapatkan Komisi dari Setiap Penjualan" },
+      { url: "https://i.imgur.com/placeholder3.jpg", teks: "Penarikan Saldo Mulai Rp 50.000" }
+    ];
 
     let akun = null;
     let refreshTimer = null;
+    let bannerIdx = 0;
+    let grafikHarianObj = null;
+    let grafikBulananObj = null;
+
+    // ==============================================
+    // === NOTIFIKASI / TOAST — TANPA TOMBOL OK ===
+    // ==============================================
+    function notif(pesan, jenis="info") {
+      const box = document.getElementById("toast-box");
+      const toast = document.getElementById("toast");
+      
+      const warna = {
+        sukses: "bg-success text-white",
+        error: "bg-danger text-white",
+        peringatan: "bg-warning text-white",
+        info: "bg-primary text-white"
+      }[jenis] || "bg-primary text-white";
+      
+      box.className = `px-5 py-3 rounded-xl shadow-lg text-center font-medium ${warna}`;
+      box.textContent = pesan;
+      
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("aktif"), 10);
+      
+      setTimeout(() => {
+        toast.classList.remove("aktif");
+        setTimeout(() => toast.classList.add("hidden"), 300);
+      }, 3000); // Hilang otomatis dalam 3 detik
+    }
 
     // === Format Uang ===
     function formatRp(angka) {
@@ -209,6 +266,18 @@
       if (s) { akun = s; bukaHalamanUtama(); }
     }
 
+    // === Banner Slide ===
+    function gantiBanner() {
+      const b = BANNER_LIST[bannerIdx];
+      document.getElementById("banner-img").src = b.url;
+      document.getElementById("banner-caption").textContent = b.teks;
+      for(let i=0; i<BANNER_LIST.length; i++) {
+        document.getElementById(`dot-${i}`).classList.toggle("bg-white", i===bannerIdx);
+        document.getElementById(`dot-${i}`).classList.toggle("bg-white/40", i!==bannerIdx);
+      }
+      bannerIdx = (bannerIdx + 1) % BANNER_LIST.length;
+    }
+
     // === Navigasi Tab ===
     function bukaTab(nama) {
       ["akun", "transaksi", "saldo", "cs"].forEach(t => {
@@ -217,6 +286,7 @@
         document.getElementById(`tab-btn-${t}`).classList.toggle("font-medium", t === nama);
         document.getElementById(`tab-btn-${t}`).classList.toggle("text-gray-500", t !== nama);
       });
+      if (nama === "transaksi") muatGrafik();
       if (nama === "saldo") muatData();
     }
 
@@ -239,7 +309,7 @@
       const nama = document.getElementById("d-nama").value.trim();
       const nohp = document.getElementById("d-nohp").value.trim();
       const pass = document.getElementById("d-pass").value.trim();
-      if (!nama || !nohp || !pass) return alert("Lengkapi semua data!");
+      if (!nama || !nohp || !pass) return notif("Silakan lengkapi seluruh data yang diperlukan", "peringatan");
       
       loading(true);
       const res = await fetch(DEPLOY_URL, {
@@ -249,15 +319,15 @@
       
       if (res.status === "sukses") {
         window.open(`https://wa.me/${WA_ADMIN}?text=PENDAFTARAN%20${encodeURIComponent(nama)}%20ID:${res.id}`, "_blank");
-        alert("Pengajuan terkirim! Tunggu admin mengaktifkan akun.");
+        notif("Pengajuan pendaftaran telah dikirim. Tunggu verifikasi dari tim kami.", "sukses");
         kembaliLogin();
-      } else alert(res.pesan);
+      } else notif(res.pesan || "Pendaftaran gagal", "error");
     }
 
     async function login() {
       const user = document.getElementById("user").value.trim();
       const pass = document.getElementById("pass").value.trim();
-      if (!user || !pass) return alert("Isi ID & kata sandi!");
+      if (!user || !pass) return notif("Masukkan ID dan kata sandi Anda", "peringatan");
       
       loading(true);
       const res = await fetch(DEPLOY_URL, {
@@ -268,8 +338,9 @@
       if (res.status === "sukses") {
         akun = res.data;
         simpanSesi(akun);
+        notif("Selamat datang, " + akun.nama, "sukses");
         bukaHalamanUtama();
-      } else alert(res.pesan);
+      } else notif(res.pesan || "Kredensial tidak sesuai", "error");
     }
 
     // === Tampil Halaman Utama ===
@@ -278,18 +349,20 @@
       document.getElementById("hal-daftar").classList.add("hidden");
       document.getElementById("hal-utama").classList.remove("hidden");
       
-      // Isi data akun
       document.getElementById("a-id").textContent = akun.id;
       document.getElementById("a-nama").textContent = akun.nama;
-      document.getElementById("a-nohp").textContent = akun.nohp.replace(/(\d{3})(\d{4})(\d+)/, "$1-xxxx-$3");
+      document.getElementById("a-nohp").textContent = akun.nohp;
       document.getElementById("link-wa").href = `https://wa.me/${WA_ADMIN}?text=Halo Admin, saya ${encodeURIComponent(akun.nama)} (${akun.id})`;
       
-      // Muat data & auto-refresh
+      gantiBanner();
+      setInterval(gantiBanner, 10000);
+      
       muatData();
       if (!refreshTimer) refreshTimer = setInterval(muatData, 10000);
     }
 
-    // === MUAT DATA SALDO & TRANSAKSI ===
+    // === Muat Data ===
+    let semuaTransaksi = [];
     async function muatData() {
       if (!akun) return;
       
@@ -300,21 +373,21 @@
       
       if (res.status !== "sukses") return;
       
-      // ✅ UPDATE SEMUA NILAI SALDO DI TAB SALDO
+      semuaTransaksi = res.transaksi;
+      
       document.getElementById("saldo-tersedia").textContent = formatRp(res.saldoBisaDitarik);
       document.getElementById("saldo-pending").textContent = formatRp(res.saldoPending);
       document.getElementById("saldo-ditarik").textContent = formatRp(res.totalDitarik);
       document.getElementById("maks-tarik").textContent = formatRp(res.saldoBisaDitarik);
       
-      // Riwayat Transaksi
       let html = "";
       if (res.transaksi.length === 0) {
-        html = "<p class='text-gray-400 text-center py-4'>Belum ada transaksi</p>";
+        html = "<p class='text-gray-400 text-center py-4'>Belum terdapat riwayat transaksi</p>";
       } else {
         res.transaksi.forEach(t => {
           const sts = t[5] || "menunggu";
           const warna = { terverifikasi:"text-success", menunggu:"text-warning", dibatalkan:"text-danger" }[sts] || "text-gray-500";
-          const label = { terverifikasi:"Terverifikasi", menunggu:"Menunggu", dibatalkan:"Dibatalkan" }[sts] || sts;
+          const label = { terverifikasi:"Terverifikasi", menunggu:"Menunggu Konfirmasi", dibatalkan:"Dibatalkan" }[sts] || sts;
           
           html += `<div class="bg-gray-50 p-3 rounded-xl flex justify-between">
             <div>
@@ -328,15 +401,14 @@
       }
       document.getElementById("daftar-trans").innerHTML = html;
       
-      // Riwayat Penarikan
       html = "";
       if (res.penarikan.length === 0) {
-        html = "<p class='text-gray-400 text-center py-4'>Belum ada pengajuan</p>";
+        html = "<p class='text-gray-400 text-center py-4'>Belum terdapat riwayat penarikan</p>";
       } else {
         res.penarikan.forEach(t => {
           const sts = t[5] || "menunggu";
           const warna = { selesai:"text-success", menunggu:"text-warning", ditolak:"text-danger" }[sts] || "text-gray-500";
-          const label = { selesai:"Sudah Dibayarkan", menunggu:"Menunggu", ditolak:"Ditolak" }[sts] || sts;
+          const label = { selesai:"Telah Dibayarkan", menunggu:"Sedang Diproses", ditolak:"Ditolak" }[sts] || sts;
           
           html += `<div class="bg-gray-50 p-3 rounded-xl flex justify-between">
             <div>
@@ -351,47 +423,88 @@
       document.getElementById("daftar-tarik").innerHTML = html;
     }
 
+    // === Grafik ===
+    function muatGrafik() {
+      const transTerverifikasi = semuaTransaksi.filter(t => t[5] === "terverifikasi");
+      
+      const hariLabel = [], hariNilai = [];
+      for(let i=6; i>=0; i--) {
+        const tgl = new Date(); tgl.setDate(tgl.getDate() - i);
+        hariLabel.push(tgl.toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit'}));
+        hariNilai.push(transTerverifikasi.filter(t => 
+          new Date(t[3]).toDateString() === tgl.toDateString()
+        ).reduce((sum, t) => sum + Number(t[2]), 0));
+      }
+      
+      const hCtx = document.getElementById("grafik-harian").getContext("2d");
+      if(grafikHarianObj) grafikHarianObj.destroy();
+      grafikHarianObj = new Chart(hCtx, {
+        type: "bar",
+        data: {
+          labels: hariLabel,
+          datasets: [{ label: "Pendapatan", data: hariNilai, backgroundColor: "#165DFF", borderRadius: 8 }]
+        },
+        options: { responsive: true, plugins: { legend: { display:false } },
+          scales: { y: { ticks: { v => "Rp "+v.toLocaleString("id-ID") } } }
+        }
+      });
+
+      const bulanMap = {};
+      transTerverifikasi.forEach(t => {
+        const bln = new Date(t[3]).toLocaleDateString('id-ID', {month:'short', year:'numeric'});
+        bulanMap[bln] = (bulanMap[bln] || 0) + Number(t[2]);
+      });
+      const blnLabel = Object.keys(bulanMap).slice(-6);
+      const blnNilai = blnLabel.map(l => bulanMap[l]);
+      
+      const bCtx = document.getElementById("grafik-bulanan").getContext("2d");
+      if(grafikBulananObj) grafikBulananObj.destroy();
+      grafikBulananObj = new Chart(bCtx, {
+        type: "bar",
+        data: {
+          labels: blnLabel.length ? blnLabel : ["Belum ada data"],
+          datasets: [{ label: "Pendapatan", data: blnNilai.length ? blnNilai : [0], backgroundColor: "#00B42A", borderRadius: 8 }]
+        },
+        options: { responsive: true, plugins: { legend: { display:false } },
+          scales: { y: { ticks: { v => "Rp "+v.toLocaleString("id-ID") } } }
+        }
+      });
+    }
+
     // === Kirim Penarikan ===
     async function kirimTarik() {
-      const nominal = document.getElementById("t-nominal").value;
+      const nominal = Number(document.getElementById("t-nominal").value);
       const metode = document.getElementById("t-metode").value;
       const tujuan = document.getElementById("t-tujuan").value.trim();
       
-      if (!nominal || !metode || !tujuan) return alert("Lengkapi semua data!");
+      if (!nominal || !metode || !tujuan) return notif("Silakan lengkapi seluruh data penarikan", "peringatan");
+      if (nominal < MINIMAL_TARIK) return notif(`Minimal penarikan adalah ${formatRp(MINIMAL_TARIK)}`, "peringatan");
       
-      // Cek saldo cukup
-      const maksTarik = document.getElementById("maks-tarik").textContent.replace(/[^0-9]/g, "");
-      if (Number(nominal) > Number(maksTarik)) return alert("Saldo tidak mencukupi!");
+      const maksTarik = Number(document.getElementById("maks-tarik").textContent.replace(/[^0-9]/g, ""));
+      if (nominal > maksTarik) return notif("Saldo tersedia tidak mencukupi", "error");
       
       loading(true);
       const res = await fetch(DEPLOY_URL, {
         method: "POST",
-        body: new URLSearchParams({
-          action: "ajukanTarik",
-          id: akun.id,
-          nominal,
-          metode,
-          tujuan
-        })
+        body: new URLSearchParams({ action: "ajukanTarik", id: akun.id, nominal, metode, tujuan })
       }).then(r => r.json()).finally(() => loading(false));
       
       if (res.status === "sukses") {
         const pesan = `PENARIKAN%20SALDO%0ANama:${encodeURIComponent(akun.nama)}%0AID:${akun.id}%0ANominal:Rp${nominal}%0AMetode:${encodeURIComponent(metode)}%0ATujuan:${encodeURIComponent(tujuan)}`;
         window.open(`https://wa.me/${WA_ADMIN}?text=${pesan}`, "_blank");
-        alert("✅ Pengajuan terkirim! Tunggu konfirmasi.");
+        notif("Pengajuan penarikan telah dikirim. Menunggu verifikasi.", "sukses");
         document.getElementById("t-nominal").value = "";
         document.getElementById("t-metode").value = "";
         document.getElementById("t-tujuan").value = "";
         muatData();
-      } else alert("Gagal mengirim!");
+      } else notif("Pengajuan gagal dikirim, silakan coba kembali", "error");
     }
 
     // === Hapus Akun ===
     function konfirmasiHapus() {
-      document.getElementById("popup-hapus").classList.remove("hidden");
-    }
-    function tutupPopup() {
-      document.getElementById("popup-hapus").classList.add("hidden");
+      if (confirm("Apakah Anda yakin menghapus akun? Tindakan ini tidak dapat dibatalkan.")) {
+        hapusAkun();
+      }
     }
     async function hapusAkun() {
       loading(true);
@@ -399,9 +512,8 @@
         method: "POST",
         body: new URLSearchParams({ action: "hapusAkun", id: akun.id })
       }).finally(() => loading(false));
-      tutupPopup();
       keluar();
-      alert("Akun telah dihapus.");
+      notif("Akun telah dihapus dari sistem", "info");
     }
 
     // === Keluar ===
@@ -415,7 +527,6 @@
       document.getElementById("pass").value = "";
     }
 
-    // Jalankan cek sesi saat halaman dimuat
     cekSesiLama();
   </script>
 </body>
