@@ -3,331 +3,332 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — TNXUS CLUB</title>
+  <title>Panel Admin - Afiliasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script>
-    tailwind.config = {theme:{extend:{colors:{prim:'#0f172a',sek:'#1e293b',aksen:'#f97316',hijau:'#10b981',merah:'#ef4444',abu:'#64748b'}}}}
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+            dark: '#1E293B',
+          }
+        }
+      }
+    }
   </script>
   <style>
-    body{background:#0f172a;color:white;min-height:100vh;}
-    .kartu{background:#1e293b;border-radius:0.75rem;padding:1rem;margin-bottom:1rem;}
-    input,select{background:#334155;border:none;border-radius:0.5rem;padding:0.6rem;color:white;width:100%;margin:0.4rem 0;}
-    .tombol{border:none;border-radius:0.5rem;padding:0.6rem 1rem;font-weight:600;cursor:pointer;}
-    .tombol-utama{background:#f97316;color:white;}
-    .tombol-hijau{background:#10b981;color:white;}
-    .tombol-merah{background:#ef4444;color:white;}
-    .tombol-biru{background:#3b82f6;color:white;}
-    .halaman{display:none;}
-    .halaman.aktif{display:block;}
-    .aktif{background:#f9731622;border-left:3px solid #f97316;}
-    tr:hover{background:#334155;}
-    td,th{padding:0.5rem;border-bottom:1px solid #475569;}
-    th{text-align:left;color:#94a3b8;}
-    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#1e293b;padding:1rem;overflow-y:auto;}
-    .konten{margin-left:240px;padding:1rem;}
-    @media(max-width:768px){.sidebar{position:sticky;width:100%;height:auto;}.konten{margin-left:0;}.sidebar nav{display:flex;overflow-x:auto;gap:0.5rem;}}
+    .page { display: none; }
+    .page.active { display: block; }
+    .tab-active { border-b-2px solid #165DFF; color: #165DFF; font-weight: 600; }
   </style>
 </head>
-<body>
-  <div id="layar_login" class="flex items-center justify-center min-h-screen">
-    <div class="kartu w-full max-w-sm">
-      <h2 class="text-xl font-bold mb-6 text-center">PANEL ADMIN</h2>
-      <input type="text" id="adm_user" placeholder="Username Admin">
-      <input type="password" id="adm_pass" placeholder="Password">
-      <button class="tombol tombol-utama w-full mt-2" onclick="loginAdmin()">Masuk</button>
-      <p id="pesan_login" class="text-red-400 mt-2 text-center"></p>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-lg font-bold text-primary">Panel Admin</h1>
+      <button id="btnLogout" class="text-sm text-gray-500 hover:text-danger hidden" onclick="logout()">
+        <i class="fa fa-sign-out"></i> Keluar
+      </button>
     </div>
-  </div>
+  </header>
 
-  <div id="admin" class="sembunyi">
-    <aside class="sidebar">
-      <h2 class="font-bold text-lg mb-4">Admin Panel</h2>
-      <nav class="space-y-1">
-        <button class="aktif w-full text-left p-2 rounded" data-hlm="daftar_user"><i class="fa fa-users"></i> Daftar Afiliator</button>
-        <button class="w-full text-left p-2 rounded" data-hlm="tambah_saldo"><i class="fa fa-plus-circle"></i> Tambah Saldo Masuk</button>
-        <button class="w-full text-left p-2 rounded" data-hlm="verif_saldo"><i class="fa fa-check-square-o"></i> Verifikasi Saldo</button>
-        <button class="w-full text-left p-2 rounded" data-hlm="tarik_saldo"><i class="fa fa-money"></i> Penarikan Saldo</button>
-        <button class="w-full text-left p-2 rounded text-red-400" onclick="keluar()"><i class="fa fa-sign-out"></i> Keluar</button>
-      </nav>
-    </aside>
+  <main class="container mx-auto px-4 py-4">
+    <!-- Halaman Login -->
+    <div id="page-login" class="max-w-md mx-auto mt-20">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-xl font-bold text-center mb-6">Masuk Admin</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Username</label>
+            <input type="text" id="admin_user" class="w-full px-4 py-2.5 rounded-lg border border-gray-200">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Kata Sandi</label>
+            <input type="password" id="admin_pass" class="w-full px-4 py-2.5 rounded-lg border border-gray-200">
+          </div>
+          <button onclick="loginAdmin()" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium">Masuk</button>
+        </div>
+      </div>
+    </div>
 
-    <main class="konten">
-      <!-- Daftar Afiliator -->
-      <div id="hlm_daftar_user" class="halaman aktif">
-        <h3 class="text-lg font-bold mb-4">Daftar Pengguna & Pendaftaran Baru</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr><th>ID</th><th>Nama</th><th>Username</th><th>Status Daftar</th><th>Aksi</th></tr></thead>
-            <tbody id="tabel_user"></tbody>
-          </table>
+    <!-- Halaman Utama -->
+    <div id="page-dashboard" class="hidden">
+      <!-- Tab Nav -->
+      <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+        <button class="px-4 py-3 tab-btn tab-active" data-tab="afiliator">Data Afiliator</button>
+        <button class="px-4 py-3 tab-btn text-gray-500" data-tab="transaksi">Transaksi</button>
+        <button class="px-4 py-3 tab-btn text-gray-500" data-tab="saldo">Verifikasi Saldo</button>
+        <button class="px-4 py-3 tab-btn text-gray-500" data-tab="penarikan">Penarikan</button>
+      </div>
+
+      <!-- Tab: Afiliator -->
+      <div id="tab-afiliator" class="tab-content active">
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+          <h3 class="font-semibold mb-4">Tambah Afiliator Baru</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><input type="text" id="new_nama" placeholder="Nama Lengkap" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><input type="text" id="new_hp" placeholder="Nomor HP" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><input type="text" id="new_user" placeholder="Username" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><input type="password" id="new_pass" placeholder="Kata Sandi" class="w-full px-3 py-2 border rounded-lg"></div>
+          </div>
+          <button onclick="tambahAfiliator()" class="mt-3 bg-primary text-white px-4 py-2 rounded-lg">Simpan</button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <h3 class="font-semibold mb-4">Daftar Afiliator</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="p-2 text-left">ID</th>
+                  <th class="p-2 text-left">Nama</th>
+                  <th class="p-2 text-left">HP</th>
+                  <th class="p-2 text-left">Saldo</th>
+                  <th class="p-2 text-left">Status</th>
+                  <th class="p-2 text-left">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="daftarAfiliator"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Tambah Saldo -->
-      <div id="hlm_tambah_saldo" class="halaman">
-        <h3 class="text-lg font-bold mb-4">Tambah Saldo Masuk</h3>
-        <div class="kartu max-w-md">
-          <input type="text" id="ts_iduser" placeholder="ID Afiliasi">
-          <input type="number" id="ts_jumlah" placeholder="Jumlah Rp">
-          <input type="text" id="ts_keterangan" placeholder="Keterangan / Sumber">
-          <button class="tombol tombol-hijau w-full" onclick="tambahSaldo()">Tambah Saldo</button>
-          <p id="pesan_ts" class="mt-2 text-sm"></p>
+      <!-- Tab: Transaksi -->
+      <div id="tab-transaksi" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+          <h3 class="font-semibold mb-4">Tambah Transaksi</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><input type="text" id="trans_id_afiliasi" placeholder="ID Afiliasi" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><input type="number" id="trans_jumlah" placeholder="Jumlah" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><select id="trans_jenis" class="w-full px-3 py-2 border rounded-lg">
+              <option value="masuk">Saldo Masuk</option>
+              <option value="keluar">Pengurangan</option>
+            </select></div>
+            <div><input type="text" id="trans_keterangan" placeholder="Keterangan" class="w-full px-3 py-2 border rounded-lg"></div>
+          </div>
+          <button onclick="tambahTransaksi()" class="mt-3 bg-primary text-white px-4 py-2 rounded-lg">Simpan Transaksi</button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <h3 class="font-semibold mb-4">Riwayat Semua Transaksi</h3>
+          <div id="riwayatTransaksi" class="space-y-2 text-sm"></div>
         </div>
       </div>
 
-      <!-- Verifikasi Saldo -->
-      <div id="hlm_verif_saldo" class="halaman">
-        <h3 class="text-lg font-bold mb-4">Verifikasi Saldo Masuk</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr><th>ID Transaksi</th><th>ID User</th><th>Jumlah</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
-            <tbody id="tabel_saldo_masuk"></tbody>
-          </table>
+      <!-- Tab: Verifikasi Saldo Masuk -->
+      <div id="tab-saldo" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <h3 class="font-semibold mb-4">Verifikasi Saldo Masuk</h3>
+          <div id="verifikasiSaldoMasuk" class="space-y-4"></div>
         </div>
       </div>
 
-      <!-- Penarikan Saldo -->
-      <div id="hlm_tarik_saldo" class="halaman">
-        <h3 class="text-lg font-bold mb-4">Pengajuan Penarikan Saldo</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr><th>ID Ajuan</th><th>ID User</th><th>Nominal</th><th>Metode</th><th>Tujuan</th><th>Status</th><th>Aksi</th></tr></thead>
-            <tbody id="tabel_tarik_saldo"></tbody>
-          </table>
+      <!-- Tab: Verifikasi Penarikan -->
+      <div id="tab-penarikan" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <h3 class="font-semibold mb-4">Pengajuan Penarikan</h3>
+          <div id="daftarPenarikan" class="space-y-4"></div>
         </div>
       </div>
-    </main>
-  </div>
+    </div>
+  </main>
 
-<script>
-const URL_API = 'https://script.google.com/macros/s/AKfycbxAFKnMYTgGmZLiRtKCl8ol1gjq0KIwdbZ7VAuJIr0E6aTY8b7QxjSEsMxbgvsz4qWbCw/exec'; // Ganti sama URL Web App seperti di aplikasi afiliasi
-let token = localStorage.getItem('admin_token');
+  <script>
+    const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-oXQe7tpfNqdgd_TbNHWTvi57uDlecOUkXllNMs9ejA-gYKVUFls_Uc9KLKL39idJ6A/exec"; // Ganti SAMA URL di atas
+    let adminSesi = null;
 
-window.onload = function() {
-  if (token) muatHalamanAdmin();
-  
-  // Navigasi sidebar
-  document.querySelectorAll('.sidebar button[data-hlm]').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('aktif'));
-      btn.classList.add('aktif');
-      document.querySelectorAll('.halaman').forEach(h => h.classList.remove('aktif'));
-      document.getElementById('hlm_' + btn.dataset.hlm).classList.add('aktif');
+    document.addEventListener('DOMContentLoaded', () => {
+      cekSesiAdmin();
       
-      // Muat data saat dibuka
-      if (btn.dataset.hlm === 'daftar_user') muatDaftarUser();
-      if (btn.dataset.hlm === 'verif_saldo') muatVerifSaldo();
-      if (btn.dataset.hlm === 'tarik_saldo') muatTarikSaldo();
-    };
-  });
-};
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('tab-active'); b.classList.add('text-gray-500');
+          });
+          btn.classList.add('tab-active'); btn.classList.remove('text-gray-500');
+          
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+          
+          if(adminSesi) muatDataAdmin();
+        });
+      });
+    });
 
-async function loginAdmin() {
-  const username = document.getElementById('adm_user').value;
-  const password = document.getElementById('adm_pass').value;
-  
-  const res = await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'login_admin', username, password })
-  });
-  const data = await res.json();
-  
-  if (data.sukses) {
-    token = data.token;
-    localStorage.setItem('admin_token', token);
-    muatHalamanAdmin();
-  } else {
-    document.getElementById('pesan_login').textContent = data.pesan;
-  }
-}
+    function cekSesiAdmin() {
+      const sesi = JSON.parse(localStorage.getItem('admin_sesi') || '{}');
+      if(sesi.nama && (Date.now() - sesi.terakhir_login) < 30*24*60*60*1000) {
+        adminSesi = sesi;
+        masukDashboard();
+      }
+    }
 
-function muatHalamanAdmin() {
-  document.getElementById('layar_login').classList.add('sembunyi');
-  document.getElementById('admin').classList.remove('sembunyi');
-  muatDaftarUser();
-}
+    async function loginAdmin() {
+      const username = document.getElementById('admin_user').value.trim();
+      const password = document.getElementById('admin_pass').value;
+      
+      const res = await fetch(APPSCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({aksi: 'login_admin', username, password})
+      });
+      
+      const data = await res.json();
+      if(data.sukses) {
+        adminSesi = { nama: username, terakhir_login: Date.now() };
+        localStorage.setItem('admin_sesi', JSON.stringify(adminSesi));
+        masukDashboard();
+      } else {
+        alert('Login gagal');
+      }
+    }
 
-async function muatDaftarUser() {
-  const res = await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'daftar_user', token })
-  });
-  const data = await res.json();
-  if (!data.sukses) return keluar();
-  
-  const tbody = document.getElementById('tabel_user');
-  tbody.innerHTML = data.map(u => `
-    <tr>
-      <td>${u.id}</td>
-      <td>${u.nama}</td>
-      <td>${u.username}</td>
-      <td>
-        <span class="px-2 py-1 rounded text-xs ${
-          u.status_pendaftaran === 'DITERIMA' ? 'bg-green-600/30 text-green-300' :
-          u.status_pendaftaran === 'DITOLAK' ? 'bg-red-600/30 text-red-300' :
-          'bg-yellow-600/30 text-yellow-300'
-        }">${u.status_pendaftaran}</span>
-      </td>
-      <td>
-        ${u.status_pendaftaran === 'MENUNGGU' ? `
-          <button class="tombol tombol-hijau text-xs py-1 px-2" onclick="prosesDaftar('${u.id}','setujui')">Setujui</button>
-          <button class="tombol tombol-merah text-xs py-1 px-2" onclick="prosesDaftar('${u.id}','tolak')">Tolak</button>
-        ` : ''}
-        <button class="tombol ${u.status_akun === 'AKTIF' ? 'tombol-merah' : 'tombol-hijau'} text-xs py-1 px-2" 
-          onclick="toggleAkun('${u.id}','${u.status_akun === 'AKTIF' ? 'NONAKTIF' : 'AKTIF'}')">
-          ${u.status_akun === 'AKTIF' ? 'Nonaktifkan' : 'Aktifkan'}
-        </button>
-      </td>
-    </tr>
-  `).join('');
-}
+    function masukDashboard() {
+      document.getElementById('page-login').classList.add('hidden');
+      document.getElementById('page-dashboard').classList.remove('hidden');
+      document.getElementById('btnLogout').classList.remove('hidden');
+      muatDataAdmin();
+      setInterval(muatDataAdmin, 30000);
+    }
 
-async function prosesDaftar(idUser, status) {
-  await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'verif_daftar', token, id_user: idUser, status })
-  });
-  muatDaftarUser();
-}
+    async function muatDataAdmin() {
+      const res = await fetch(APPSCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({aksi: 'data_admin'})
+      });
+      
+      const data = await res.json();
+      if(!data.sukses) return;
+      
+      // Daftar Afiliator
+      document.getElementById('daftarAfiliator').innerHTML = data.afiliator.map(u => `
+        <tr class="border-t">
+          <td class="p-2">${u.id}</td>
+          <td class="p-2">${u.nama}</td>
+          <td class="p-2">${u.no_hp}</td>
+          <td class="p-2">Rp${(u.saldo_tersedia || 0).toLocaleString()}</td>
+          <td class="p-2">
+            <span class="px-2 py-0.5 rounded text-xs ${u.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+              ${u.status}
+            </span>
+          </td>
+          <td class="p-2">
+            <button onclick="ubahStatus('${u.id}', '${u.status === 'aktif' ? 'nonaktif' : 'aktif'}')" 
+              class="text-sm px-2 py-1 ${u.status === 'aktif' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} rounded">
+              ${u.status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      
+      // Verifikasi Saldo Masuk
+      document.getElementById('verifikasiSaldoMasuk').innerHTML = data.pending_saldo_masuk.length ? 
+        data.pending_saldo_masuk.map(t => `
+          <div class="border p-3 rounded-lg">
+            <p class="font-medium">${t.keterangan}</p>
+            <p>Afiliasi: ${t.id_afiliasi} | Rp${t.jumlah.toLocaleString()}</p>
+            <p class="text-sm text-yellow-600 mb-2">Status: Menunggu verifikasi</p>
+            <div class="flex gap-2">
+              <button onclick="setujuiSaldoMasuk('${t.id}')" class="bg-success text-white px-3 py-1 rounded">Setujui</button>
+              <button onclick="tolakSaldoMasuk('${t.id}')" class="bg-gray-200 px-3 py-1 rounded">Tolak</button>
+            </div>
+          </div>
+        `).join('') : '<p class="text-gray-400">Tidak ada yang menunggu verifikasi</p>';
+      
+      // Penarikan
+      document.getElementById('daftarPenarikan').innerHTML = data.penarikan.length ? 
+        data.penarikan.map(p => `
+          <div class="border p-3 rounded-lg">
+            <p class="font-medium">Afiliasi: ${p.id_afiliasi}</p>
+            <p>Nominal: Rp${p.nominal.toLocaleString()}</p>
+            <p>Tujuan: ${p.metode} - ${p.nama} ${p.nomor}</p>
+            <p class="text-sm text-yellow-600 mb-2">Status: ${p.status}</p>
+            ${p.status === 'menunggu' ? `
+              <div class="flex gap-2">
+                <button onclick="prosesPenarikan('${p.id}', 'proses')" class="bg-warning text-white px-3 py-1 rounded">Sedang Diproses</button>
+                <button onclick="prosesPenarikan('${p.id}', 'berhasil')" class="bg-success text-white px-3 py-1 rounded">Berhasil</button>
+                <button onclick="prosesPenarikan('${p.id}', 'gagal')" class="bg-danger text-white px-3 py-1 rounded">Gagal</button>
+              </div>
+            ` : ''}
+            ${p.status === 'diproses' ? `
+              <button onclick="prosesPenarikan('${p.id}', 'berhasil')" class="bg-success text-white px-3 py-1 rounded">Tandai Berhasil</button>
+            ` : ''}
+          </div>
+        `).join('') : '<p class="text-gray-400">Tidak ada pengajuan</p>';
+    }
 
-async function toggleAkun(idUser, status) {
-  await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'toggle_akun', token, id_user: idUser, status })
-  });
-  muatDaftarUser();
-}
+    async function tambahAfiliator() {
+      const data = {
+        aksi: 'tambah_afiliator',
+        nama: document.getElementById('new_nama').value.trim(),
+        no_hp: document.getElementById('new_hp').value.trim(),
+        username: document.getElementById('new_user').value.trim(),
+        password: document.getElementById('new_pass').value
+      };
+      
+      const res = await fetch(APPSCRIPT_URL, {method: 'POST', body: JSON.stringify(data)});
+      const hasil = await res.json();
+      if(hasil.sukses) { alert('Berhasil ditambahkan'); muatDataAdmin(); }
+      else alert(hasil.pesan);
+    }
 
-async function tambahSaldo() {
-  const idUser = document.getElementById('ts_iduser').value;
-  const jumlah = Number(document.getElementById('ts_jumlah').value);
-  const keterangan = document.getElementById('ts_keterangan').value;
-  
-  const res = await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'tambah_saldo', token, id_user: idUser, jumlah, keterangan })
-  });
-  const data = await res.json();
-  
-  const pesan = document.getElementById('pesan_ts');
-  pesan.textContent = data.sukses ? '✅ Saldo berhasil ditambahkan ke antrean verifikasi' : '❌ Gagal: ' + (data.pesan || 'Kesalahan sistem');
-  pesan.className = data.sukses ? 'mt-2 text-sm text-green-400' : 'mt-2 text-sm text-red-400';
-  
-  if (data.sukses) {
-    document.getElementById('ts_iduser').value = '';
-    document.getElementById('ts_jumlah').value = '';
-    document.getElementById('ts_keterangan').value = '';
-  }
-}
+    async function ubahStatus(id, status) {
+      await fetch(APPSCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({aksi: 'ubah_status', id, status})
+      });
+      muatDataAdmin();
+    }
 
-async function muatVerifSaldo() {
-  const res = await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'riwayat_masuk', token })
-  });
-  const data = await res.json();
-  
-  const tbody = document.getElementById('tabel_saldo_masuk');
-  tbody.innerHTML = data.length === 0 ? '<tr><td colspan="6" class="text-center text-gray-400 py-4">Tidak ada data</td></tr>' :
-    data.map(t => `
-      <tr>
-        <td>${t.id}</td>
-        <td>${t.id_user}</td>
-        <td>Rp ${Number(t.jumlah).toLocaleString('id-ID')}</td>
-        <td>${t.keterangan || '-'}</td>
-        <td>
-          <span class="px-2 py-1 rounded text-xs ${
-            t.status === 'SELESAI' ? 'bg-green-600/30 text-green-300' :
-            t.status === 'DITOLAK' ? 'bg-red-600/30 text-red-300' :
-            'bg-yellow-600/30 text-yellow-300'
-          }">${t.status}</span>
-        </td>
-        <td>
-          ${t.status === 'PENDING' ? `
-            <button class="tombol tombol-hijau text-xs py-1 px-2" onclick="setujuiSaldo('${t.id}')">Setujui</button>
-            <button class="tombol tombol-merah text-xs py-1 px-2" onclick="tolakSaldo('${t.id}')">Tolak</button>
-          ` : ''}
-          ${t.status === 'DITERIMA' ? `
-            <button class="tombol tombol-biru text-xs py-1 px-2" onclick="pindahTersedia('${t.id}')">→ Tersedia</button>
-          ` : ''}
-        </td>
-      </tr>
-    `).join('');
-}
+    async function tambahTransaksi() {
+      const data = {
+        aksi: 'tambah_transaksi',
+        id_afiliasi: document.getElementById('trans_id_afiliasi').value.trim(),
+        jumlah: parseInt(document.getElementById('trans_jumlah').value),
+        jenis: document.getElementById('trans_jenis').value,
+        keterangan: document.getElementById('trans_keterangan').value.trim()
+      };
+      
+      const res = await fetch(APPSCRIPT_URL, {method: 'POST', body: JSON.stringify(data)});
+      const hasil = await res.json();
+      if(hasil.sukses) alert('Transaksi dicatat & masuk ke saldo pending');
+      else alert(hasil.pesan);
+    }
 
-async function setujuiSaldo(idTrx) {
-  await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'verif_saldo', token, id_trx: idTrx, status: 'setujui' })
-  });
-  muatVerifSaldo();
-}
+    async function setujuiSaldoMasuk(id) {
+      await fetch(APPSCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({aksi: 'verifikasi_saldo_masuk', id, disetujui: true})
+      });
+      muatDataAdmin();
+    }
 
-async function tolakSaldo(idTrx) {
-  await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'verif_saldo', token, id_trx: idTrx, status: 'tolak' })
-  });
-  muatVerifSaldo();
-}
+    async function tolakSaldoMasuk(id) {
+      await fetch(APPSCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({aksi: 'verifikasi_saldo_masuk', id, disetujui: false})
+      });
+      muatDataAdmin();
+    }
 
-async function pindahTersedia(idTrx) {
-  await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'ke_tersedia', token, id_trx: idTrx })
-  });
-  muatVerifSaldo();
-}
+    async function prosesPenarikan(id, status) {
+      await fetch(APPSCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({aksi: 'proses_penarikan', id, status})
+      });
+      muatDataAdmin();
+    }
 
-async function muatTarikSaldo() {
-  const res = await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'daftar_wd', token })
-  });
-  const data = await res.json();
-  
-  const tbody = document.getElementById('tabel_tarik_saldo');
-  tbody.innerHTML = data.length === 0 ? '<tr><td colspan="7" class="text-center text-gray-400 py-4">Tidak ada pengajuan</td></tr>' :
-    data.map(w => `
-      <tr>
-        <td>${w.id}</td>
-        <td>${w.id_user}</td>
-        <td>Rp ${Number(w.nominal).toLocaleString('id-ID')}</td>
-        <td>${w.metode}</td>
-        <td>${w.nomor} — ${w.nama_pemilik}</td>
-        <td>
-          <span class="px-2 py-1 rounded text-xs ${
-            w.status === 'BERHASIL' ? 'bg-green-600/30 text-green-300' :
-            w.status === 'DITOLAK' ? 'bg-red-600/30 text-red-300' :
-            'bg-yellow-600/30 text-yellow-300'
-          }">${w.status}</span>
-        </td>
-        <td>
-          ${w.status === 'MENUNGGU' ? `
-            <button class="tombol tombol-hijau text-xs py-1 px-2" onclick="prosesWD('${w.id}','BERHASIL')">Berhasil</button>
-            <button class="tombol tombol-merah text-xs py-1 px-2" onclick="prosesWD('${w.id}','DITOLAK')">Gagal</button>
-          ` : ''}
-        </td>
-      </tr>
-    `).join('');
-}
-
-async function prosesWD(idWd, status) {
-  const catatan = prompt('Masukkan catatan (opsional):');
-  await fetch(URL_API, {
-    method: 'POST',
-    body: new URLSearchParams({ aksi: 'proses_wd', token, id_wd: idWd, status, catatan: catatan || '' })
-  });
-  muatTarikSaldo();
-}
-
-async function keluar() {
-  await fetch(URL_API, { method: 'POST', body: new URLSearchParams({ aksi: 'keluar', token }) });
-  localStorage.removeItem('admin_token');
-  token = null;
-  location.reload();
-}
-</script>
+    function logout() {
+      localStorage.removeItem('admin_sesi');
+      location.reload();
+    }
+  </script>
 </body>
 </html>
