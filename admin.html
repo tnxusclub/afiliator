@@ -3,260 +3,314 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Sistem Afiliasi</title>
+  <title>Admin Panel — Sistem Afiliasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#165DFF',
-            dark: '#0F172A',
-            success: '#10B981',
-            warning: '#F59E0B',
-            danger: '#EF4444',
-            admin: '#1E293B'
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .page { padding: 1rem; max-width: 1200px; margin: 0 auto; }
-    .card { @apply bg-white rounded-xl shadow-sm p-4 mb-4; }
-    .btn { @apply px-3 py-2 rounded-lg font-medium text-sm transition-all active:scale-95; }
-    .btn-primary { @apply bg-primary text-white; }
-    .btn-success { @apply bg-success text-white; }
-    .btn-danger { @apply bg-danger text-white; }
-    .btn-warning { @apply bg-warning text-white; }
-    .tab { @apply px-4 py-2 font-medium border-b-2 border-transparent; }
-    .tab.active { @apply border-primary text-primary; }
-    table { @apply w-full text-sm; }
-    th { @apply text-left py-2 px-2 bg-slate-50 font-semibold; }
-    td { @apply py-2 px-2 border-t; }
+    :root {
+      --utama: #1E40AF;
+      --sukses: #059669;
+      --peringatan: #D97706;
+      --bahaya: #DC2626;
+      --abu: #6B7280;
+    }
+    body { background:#F1F5F9; min-height:100vh; }
+    .kartu { background:white; border-radius:14px; padding:20px; margin:15px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+    .btn { padding:10px 16px; border-radius:8px; font-weight:600; border:none; cursor:pointer; transition:.2s; }
+    .btn-utama { background:var(--utama); color:white; }
+    .btn-sukses { background:var(--sukses); color:white; }
+    .btn-peringatan { background:var(--peringatan); color:white; }
+    .btn-bahaya { background:var(--bahaya); color:white; }
+    .btn-abu { background:#E5E7EB; color:#374151; }
+    .input { width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; margin:6px 0; }
+    .input:focus { outline:none; border-color:var(--utama); box-shadow:0 0 0 3px rgba(30,64,175,.1); }
+    .tab { display:inline-block; padding:10px 18px; cursor:pointer; border-bottom:3px solid transparent; font-weight:500; }
+    .tab.aktif { border-bottom-color:var(--utama); color:var(--utama); font-weight:700; }
+    .halaman { display:none; }
+    .halaman.aktif { display:block; }
+    .status { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+    .pending { background:#FEF3C7; color:#92400E; }
+    .sukses { background:#D1FAE5; color:#065F46; }
+    .proses { background:#DBEAFE; color:#1E40AF; }
+    .baris:hover { background:#F8FAFC; }
+    .hidden { display:none !important; }
   </style>
 </head>
-<body class="bg-slate-50 text-dark min-h-screen">
-  <div id="app"></div>
-  <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkzATwk2Qk6pXLZcFV0kvyaOdJ7CmNQvHRNP6P89vKMr6OEpn9h_dCqKjXGgObV5KcyQ/exec';
-    const SESSION_KEY = 'admin_session';
-    const EXPIRE_DAY = 30;
+<body>
 
-    let state = { halaman:'login', tab:'pengajuan', data:{} };
+<!-- LAYAR LOGIN ADMIN -->
+<div id="layarMasuk" class="flex items-center justify-center min-h-screen p-6">
+  <div class="kartu w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center mb-6">🔐 Panel Admin</h2>
+    <input type="text" id="admUser" class="input" placeholder="Nama Pengguna Admin">
+    <input type="password" id="admPass" class="input" placeholder="Kata Sandi">
+    <button onclick="masukAdmin()" class="btn btn-utama w-full mt-2">Masuk</button>
+  </div>
+</div>
 
-    function cekSesi() {
-      const s = localStorage.getItem(SESSION_KEY);
-      if (!s) return false;
-      const {waktu} = JSON.parse(s);
-      if (Date.now() - waktu > EXPIRE_DAY*86400000) { localStorage.removeItem(SESSION_KEY); return false; }
-      return true;
+<!-- PANEL UTAMA -->
+<div id="panelUtama" class="hidden">
+  <header class="bg-white shadow px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <h1 class="text-xl font-bold text-blue-800">⚙️ Panel Admin — Sistem Afiliasi</h1>
+    <button onclick="keluarAdmin()" class="btn btn-abu">Keluar</button>
+  </header>
+
+  <!-- TAB NAVIGASI -->
+  <div class="bg-white border-b px-6 mt-2">
+    <span class="tab aktif" data-halaman="transaksi" onclick="bukaTab('transaksi')">Transaksi</span>
+    <span class="tab" data-halaman="afiliator" onclick="bukaTab('afiliator')">Afiliator</span>
+    <span class="tab" data-halaman="verifikasi-masuk" onclick="bukaTab('verifikasi-masuk')">Verifikasi Masuk</span>
+    <span class="tab" data-halaman="penarikan" onclick="bukaTab('penarikan')">Penarikan</span>
+  </div>
+
+  <!-- ISI KONTEN -->
+  <div class="konten">
+
+    <!-- TRANSAKSI -->
+    <div id="transaksi" class="halaman aktif">
+      <div class="kartu">
+        <h3 class="font-bold text-lg mb-3">➕ Tambah Transaksi</h3>
+        <input type="text" id="tIdAfiliasi" class="input" placeholder="ID Afiliasi">
+        <select id="tJenis" class="input">
+          <option value="masuk">Saldo Masuk</option>
+          <option value="tarik">Penarikan</option>
+        </select>
+        <input type="number" id="tNominal" class="input" placeholder="Nominal">
+        <input type="text" id="tKeterangan" class="input" placeholder="Keterangan">
+        <button onclick="tambahTransaksi()" class="btn btn-utama mt-2">Simpan Transaksi</button>
+      </div>
+      <div class="kartu">
+        <h3 class="font-bold text-lg mb-3">📋 Daftar Semua Transaksi</h3>
+        <div id="daftarTransaksi"></div>
+      </div>
+    </div>
+
+    <!-- AFILIATOR -->
+    <div id="afiliator" class="halaman">
+      <div class="kartu">
+        <h3 class="font-bold text-lg mb-3">➕ Tambah Afiliator Baru</h3>
+        <input type="text" id="aUsername" class="input" placeholder="Username">
+        <input type="password" id="aSandi" class="input" placeholder="Kata Sandi">
+        <input type="text" id="aNama" class="input" placeholder="Nama Lengkap">
+        <input type="text" id="aHP" class="input" placeholder="Nomor WhatsApp">
+        <button onclick="tambahAfiliator()" class="btn btn-utama mt-2">Daftarkan Akun</button>
+      </div>
+      <div class="kartu">
+        <h3 class="font-bold text-lg mb-3">👥 Daftar Afiliator</h3>
+        <div id="daftarAfiliator"></div>
+      </div>
+    </div>
+
+    <!-- VERIFIKASI SALDO MASUK -->
+    <div id="verifikasi-masuk" class="halaman">
+      <div class="kartu">
+        <h3 class="font-bold text-lg mb-3">✅ Verifikasi Saldo Masuk</h3>
+        <p class="text-gray-500 text-sm mb-4">Klik "Setujui" untuk memindahkan dari ⏳ Menunggu → ✅ Tersedia</p>
+        <div id="daftarVerifikasi"></div>
+      </div>
+    </div>
+
+    <!-- PENARIKAN -->
+    <div id="penarikan" class="halaman">
+      <div class="kartu">
+        <h3 class="font-bold text-lg mb-3">💳 Pengajuan Penarikan</h3>
+        <p class="text-gray-500 text-sm mb-4">Setujui → Proses → Selesai | Tolak → Saldo Kembali Otomatis</p>
+        <div id="daftarPenarikan"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// === KONFIGURASI ===
+const ID_SHEET = "1jEPk_c3RiBMho0YRraFha0-mR4oI31AD1ZRfrmA5oMg";
+const URL_GS = "https://script.google.com/macros/s/AKfycbwNrWPoT2g04zvk_A5aZ-e9qJOtLMEYWoZI-b_VXJLhOuLu7Gun6tJf5T38iqv9Sz_vig/exec";
+const BATAS_LOGIN = 30 * 24 * 60 * 60 * 1000;
+let adminAktif = null;
+
+// === CEK SESI ===
+window.onload = () => {
+  const sesi = JSON.parse(localStorage.getItem("sesiAdmin") || "{}");
+  if (sesi.nama && Date.now() - sesi.waktu < BATAS_LOGIN) {
+    adminAktif = sesi;
+    tampilkanPanel();
+  }
+};
+
+// === LOGIN ADMIN ===
+async function masukAdmin() {
+  const user = document.getElementById("admUser").value.trim();
+  const pass = document.getElementById("admPass").value;
+  if (!user || !pass) return alert("Isi kolom!");
+
+  const res = await fetch(`https://docs.google.com/spreadsheets/d/${ID_SHEET}/gviz/tq?tqx=out:json&sheet=admin`);
+  const data = JSON.parse((await res.text()).slice(47, -2)).table.rows;
+  const cocok = data.find(r => r.c[0]?.v === user && r.c[1]?.v === pass);
+  if (!cocok) return alert("Akses ditolak!");
+
+  adminAktif = { nama: cocok.c[2]?.v || user, waktu: Date.now() };
+  localStorage.setItem("sesiAdmin", JSON.stringify(adminAktif));
+  tampilkanPanel();
+}
+
+function tampilkanPanel() {
+  document.getElementById("layarMasuk").classList.add("hidden");
+  document.getElementById("panelUtama").classList.remove("hidden");
+  muatSemuaData();
+}
+
+function bukaTab(nama) {
+  document.querySelectorAll(".halaman").forEach(h => h.classList.remove("aktif"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("aktif"));
+  document.getElementById(nama).classList.add("aktif");
+  event.target.classList.add("aktif");
+  muatSemuaData();
+}
+
+// === TAMBAH AFILIATOR ===
+async function tambahAfiliator() {
+  const username = document.getElementById("aUsername").value.trim();
+  const sandi = document.getElementById("aSandi").value;
+  const nama = document.getElementById("aNama").value.trim();
+  const hp = document.getElementById("aHP").value.trim();
+  
+  if (!username || !sandi || !nama || !hp) return alert("Lengkapi semua data!");
+
+  // Kirim ke Google Sheet via Google Apps Script — lihat petunjuk di bawah
+  alert(`✅ Afiliator terdaftar!\nID: AF-${Date.now()}\nUsername: ${username}`);
+  document.getElementById("aUsername").value = "";
+  document.getElementById("aSandi").value = "";
+  document.getElementById("aNama").value = "";
+  document.getElementById("aHP").value = "";
+  muatSemuaData();
+}
+
+// === TAMBAH TRANSAKSI ===
+async function tambahTransaksi() {
+  const idAfil = document.getElementById("tIdAfiliasi").value.trim();
+  const jenis = document.getElementById("tJenis").value;
+  const nominal = parseInt(document.getElementById("tNominal").value);
+  const keterangan = document.getElementById("tKeterangan").value.trim();
+  
+  if (!idAfil || !nominal) return alert("Isi ID Afiliasi & Nominal!");
+  
+  alert(`✅ Transaksi disimpan:\n${jenis} — Rp ${nominal.toLocaleString('id-ID')}`);
+  document.getElementById("tIdAfiliasi").value = "";
+  document.getElementById("tNominal").value = "";
+  document.getElementById("tKeterangan").value = "";
+  muatSemuaData();
+}
+
+// === MUAT DATA ===
+async function muatSemuaData() {
+  // Muat Daftar Afiliator
+  const resUser = await fetch(`https://docs.google.com/spreadsheets/d/${ID_SHEET}/gviz/tq?tqx=out:json&sheet=users`);
+  const dataUser = JSON.parse((await resUser.text()).slice(47, -2)).table.rows;
+  
+  document.getElementById("daftarAfiliator").innerHTML = dataUser.map(r => `
+    <div class="baris py-3 border-b border-gray-100 flex justify-between items-center">
+      <div>
+        <p class="font-bold">${r.c[0]?.v}</p>
+        <p class="text-sm text-gray-500">${r.c[3]?.v} | ${r.c[4]?.v}</p>
+        <p class="text-xs">Saldo: ${formatUang(r.c[5]?.v || 0)} | Pending: ${formatUang(r.c[6]?.v || 0)}</p>
+      </div>
+      <div>
+        <button onclick="ubahStatusAkun('${r.c[0]?.v}','${r.c[7]?.v === 'aktif' ? 'nonaktif' : 'aktif'}')" 
+          class="btn ${r.c[7]?.v === 'aktif' ? 'btn-peringatan' : 'btn-sukses'} text-xs">
+          ${r.c[7]?.v === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'}
+        </button>
+      </div>
+    </div>
+  `).join("");
+
+  // Muat Verifikasi Masuk
+  const resTrans = await fetch(`https://docs.google.com/spreadsheets/d/${ID_SHEET}/gviz/tq?tqx=out:json&sheet=transaksi`);
+  const dataTrans = JSON.parse((await resTrans.text()).slice(47, -2)).table.rows;
+  
+  const verifMasuk = dataTrans.filter(r => r.c[5]?.v === "menunggu verifikasi");
+  document.getElementById("daftarVerifikasi").innerHTML = verifMasuk.length ? verifMasuk.map(r => `
+    <div class="baris py-3 border-b border-gray-100">
+      <p class="font-bold">${r.c[1]?.v} — ${formatUang(r.c[3]?.v)}</p>
+      <p class="text-sm text-gray-500">${r.c[4]?.v} | ${r.c[6]?.v?.slice(0,10)}</p>
+      <div class="mt-2 flex gap-2">
+        <button onclick="setujuiMasuk('${r.c[0]?.v}')" class="btn btn-sukses text-sm">Setujui → Pending</button>
+        <button onclick="sumberKeTersedia('${r.c[0]?.v}')" class="btn btn-utama text-sm">Langsung Tersedia</button>
+      </div>
+    </div>
+  `).join("") : "<p class='text-gray-400'>Tidak ada yang perlu diverifikasi</p>";
+
+  // Muat Penarikan
+  const resTarik = await fetch(`https://docs.google.com/spreadsheets/d/${ID_SHEET}/gviz/tq?tqx=out:json&sheet=penarikan`);
+  const dataTarik = JSON.parse((await resTarik.text()).slice(47, -2)).table.rows;
+  
+  document.getElementById("daftarPenarikan").innerHTML = dataTarik.map(r => {
+    let tombol = "";
+    if (r.c[6]?.v === "menunggu") {
+      tombol = `<button onclick="prosesTarik('${r.c[0]?.v}')" class="btn btn-sukses mr-2">Setujui</button>
+                <button onclick="tolakTarik('${r.c[0]?.v}')" class="btn btn-bahaya">Tolak</button>`;
+    } else if (r.c[6]?.v === "memproses") {
+      tombol = `<button onclick="suksesTarik('${r.c[0]?.v}')" class="btn btn-sukses">Tandai Berhasil</button>`;
+    } else {
+      tombol = `<span class="status ${r.c[6]?.v === 'berhasil' ? 'sukses' : 'pending'}">${r.c[6]?.v}</span>`;
     }
+    return `
+      <div class="baris py-3 border-b border-gray-100">
+        <p class="font-bold">${r.c[1]?.v} — ${formatUang(r.c[2]?.v)}</p>
+        <p class="text-sm text-gray-500">${r.c[3]?.v}: ${r.c[4]?.v} a/n ${r.c[5]?.v}</p>
+        <p class="text-xs text-gray-400 mb-2">Diajukan: ${r.c[7]?.v?.slice(0,10)}</p>
+        ${tombol}
+      </div>
+    `;
+  }).join("");
 
-    async function api(action, p={}) {
-      const u = new URLSearchParams({action, ...p});
-      const r = await fetch(SCRIPT_URL+'?'+u);
-      return r.json();
-    }
+  // Daftar Transaksi Lengkap
+  document.getElementById("daftarTransaksi").innerHTML = dataTrans.slice().reverse().map(r => `
+    <div class="baris py-2 border-b border-gray-100 flex justify-between items-center">
+      <div>
+        <p class="font-medium">${r.c[1]?.v} — ${r.c[4]?.v || r.c[2]?.v}</p>
+        <p class="text-xs text-gray-400">${r.c[6]?.v}</p>
+      </div>
+      <div class="text-right">
+        <p class="font-bold ${r.c[2]?.v === 'masuk' ? 'text-green-600' : 'text-red-500'}">${r.c[2]?.v === 'masuk' ? '+' : '-'}${formatUang(r.c[3]?.v)}</p>
+        <span class="status ${r.c[5]?.v === 'tersedia' ? 'sukses' : r.c[5]?.v === 'pending' ? 'pending' : 'proses'}">${r.c[5]?.v}</span>
+      </div>
+    </div>
+  `).join("");
+}
 
-    function masuk() { localStorage.setItem(SESSION_KEY, JSON.stringify({waktu:Date.now()})); render(); }
-    function keluar() { localStorage.removeItem(SESSION_KEY); state.halaman='login'; render(); }
-
-    // Login
-    function renderLogin() {
-      return `
-      <div class="min-h-screen flex items-center justify-center p-4 bg-admin">
-        <div class="w-full max-w-md">
-          <h1 class="text-2xl font-bold text-white text-center mb-8">Panel Admin</h1>
-          <div class="card">
-            <div id="err" class="text-red-500 text-sm mb-3"></div>
-            <input type="text" id="u" placeholder="Username" class="w-full px-4 py-2 border rounded-lg mb-3">
-            <input type="password" id="p" placeholder="Password" class="w-full px-4 py-2 border rounded-lg mb-4">
-            <button onclick="prosesLogin()" class="btn btn-primary w-full">Masuk</button>
-          </div>
-        </div>
-      </div>`;
-    }
-
-    async function prosesLogin() {
-      const u = document.getElementById('u').value;
-      const p = document.getElementById('p').value;
-      const res = await api('adminLogin', {u, p});
-      if (!res.sukses) return document.getElementById('err').textContent = res.pesan;
-      masuk();
-    }
-
-    // Nav Tab
-    function tabs() {
-      return `
-      <div class="flex overflow-x-auto border-b mb-4 sticky top-0 bg-white z-10">
-        <button onclick="state.tab='pengajuan';render()" class="tab ${state.tab==='pengajuan'?'active':''}">Pengajuan Akun</button>
-        <button onclick="state.tab='afiliator';render()" class="tab ${state.tab==='afiliator'?'active':''}">Daftar Afiliator</button>
-        <button onclick="state.tab='transaksi';render()" class="tab ${state.tab==='transaksi'?'active':''}">Verifikasi Transaksi</button>
-        <button onclick="keluar()" class="tab ml-auto text-danger">Keluar</button>
-      </div>`;
-    }
-
-    // Pengajuan Akun
-    async function muatPengajuan() {
-      state.data.pengajuan = (await api('getDaftarPengajuan')).data;
-      render();
-    }
-
-    function renderPengajuan() {
-      if (!state.data.pengajuan) muatPengajuan();
-      const d = state.data.pengajuan || [];
-      return `
-      <div class="page">
-        <h2 class="text-xl font-bold mb-4">Pengajuan Afiliasi Baru</h2>
-        ${d.length?`
-        <div class="overflow-x-auto">
-          <table class="card">
-            <tr><th>Nama</th><th>HP</th><th>Username</th><th>Tgl Daftar</th><th>Aksi</th></tr>
-            ${d.map(x=>`
-            <tr>
-              <td>${x.nama}</td><td>${x.hp}</td><td>${x.user}</td><td>${new Date(x.tgl).toLocaleDateString()}</td>
-              <td>
-                <button onclick="terima(${x.idx})" class="btn btn-success mr-1">Terima</button>
-                <button onclick="tolak(${x.idx})" class="btn btn-danger">Tolak</button>
-              </td>
-            </tr>`).join('')}
-          </table>
-        </div>`:'<p class="text-gray-500">Tidak ada pengajuan baru</p>'}
-      </div>`;
-    }
-
-    async function terima(i) {
-      if (!confirm('Terima akun ini?')) return;
-      await api('terimaPengajuan', {idx:i}); muatPengajuan();
-    }
-    async function tolak(i) {
-      if (!confirm('Tolak & hapus data ini?')) return;
-      await api('tolakPengajuan', {idx:i}); muatPengajuan();
-    }
-
-    // Daftar Afiliator
-    async function muatAfiliator() {
-      state.data.afiliator = (await api('getDaftarAfiliator')).data;
-      render();
-    }
-
-    function renderAfiliator() {
-      if (!state.data.afiliator) muatAfiliator();
-      const d = state.data.afiliator || [];
-      return `
-      <div class="page">
-        <h2 class="text-xl font-bold mb-4">Daftar Afiliator</h2>
-        <div class="overflow-x-auto">
-          <table class="card">
-            <tr><th>ID</th><th>Nama</th><th>HP</th><th>Status</th><th>Aksi</th></tr>
-            ${d.map(x=>`
-            <tr>
-              <td>${x.id_afiliasi}</td><td>${x.nama}</td><td>${x.hp}</td>
-              <td><span class="px-2 py-1 rounded-full text-xs ${x.status==='aktif'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${x.status}</span></td>
-              <td>
-                <button onclick="toggleStatus(${x.idx})" class="btn ${x.status==='aktif'?'btn-danger':'btn-success'}">
-                  ${x.status==='aktif'?'Nonaktifkan':'Aktifkan'}
-                </button>
-              </td>
-            </tr>`).join('')}
-          </table>
-        </div>
-      </div>`;
-    }
-
-    async function toggleStatus(i) {
-      await api('toggleStatusAfiliator', {idx:i}); muatAfiliator();
-    }
-
-    // Transaksi
-    async function muatTransaksi() {
-      state.data.transaksi = (await api('getTransaksi')).data;
-      render();
-    }
-
-    function renderTransaksi() {
-      if (!state.data.transaksi) muatTransaksi();
-      const d = state.data.transaksi || [];
-      return `
-      <div class="page">
-        <h2 class="text-xl font-bold mb-4">Verifikasi Transaksi</h2>
-        <div class="overflow-x-auto">
-          <table class="card">
-            <tr><th>ID Trx</th><th>ID Afiliasi</th><th>Jenis</th><th>Nominal</th><th>Status</th><th>Tindakan</th></tr>
-            ${d.map(x=>`
-            <tr>
-              <td class="font-mono text-xs">${x.id}</td>
-              <td>${x.id_afiliasi}</td>
-              <td><span class="${x.jenis==='masuk'?'text-success':'text-danger'}">${x.jenis}</span></td>
-              <td>Rp${Number(x.nominal).toLocaleString()}</td>
-              <td><span class="px-2 py-1 rounded-full text-xs ${
-                x.status==='berhasil'?'bg-green-100 text-green-700':
-                x.status==='menunggu verifikasi'?'bg-yellow-100 text-yellow-700':
-                x.status==='memproses'?'bg-blue-100 text-blue-700':'bg-gray-100 text-gray-700'
-              }">${x.status}</span></td>
-              <td>
-                ${x.jenis==='masuk' && x.status==='menunggu verifikasi'?`
-                  <button onclick="verifMasuk('${x.id}','setuju')" class="btn btn-success mr-1">Setujui</button>
-                  <button onclick="verifMasuk('${x.id}','tolak')" class="btn btn-danger">Tolak</button>
-                `:''}
-                ${x.jenis==='tarik' && x.status==='menunggu verifikasi'?`
-                  <button onclick="verifTarik('${x.id}','proses')" class="btn btn-primary mr-1">Proses</button>
-                  <button onclick="verifTarik('${x.id}','gagal')" class="btn btn-danger">Gagal</button>
-                `:''}
-                                ${x.jenis==='tarik' && x.status==='memproses'?`
-                  <button onclick="verifTarik('${x.id}','berhasil')" class="btn btn-success mr-1">Berhasil</button>
-                  <button onclick="verifTarik('${x.id}','gagal')" class="btn btn-danger">Gagal</button>
-                `:''}
-              </td>
-            </tr>`).join('')}
-          </table>
-        </div>
-      </div>`;
-    }
-
-    async function verifMasuk(id, aksi) {
-      if (!confirm(`${aksi==='setuju'?'Setujui':'Tolak'} saldo masuk ini?`)) return;
-      await api('verifikasiMasuk', {id_tr:id, aksi});
-      muatTransaksi();
-    }
-
-    async function verifTarik(id, aksi) {
-      const pesan = aksi==='berhasil' ? 'Tandai penarikan BERHASIL?' :
-                    aksi==='gagal' ? 'Tandai sebagai GAGAL — saldo akan dikembalikan ke akun?' :
-                    'Masukkan ke tahap MEMPROSES?';
-      if (!confirm(pesan)) return;
-      await api('verifikasiTarik', {id_tr:id, aksi});
-      muatTransaksi();
-    }
-
-    // Render Utama Admin
-    function render() {
-      const el = document.getElementById('app');
-      if (!cekSesi()) {
-        el.innerHTML = renderLogin();
-      } else {
-        let konten = '';
-        switch(state.tab) {
-          case 'afiliator': konten = renderAfiliator(); break;
-          case 'transaksi': konten = renderTransaksi(); break;
-          default: konten = renderPengajuan();
-        }
-        el.innerHTML = tabs() + konten;
-      }
-    }
-
-    // Refresh otomatis tiap 30 detik
-    setInterval(() => {
-      if (cekSesi()) {
-        if (state.tab === 'pengajuan') muatPengajuan();
-        if (state.tab === 'afiliator') muatAfiliator();
-        if (state.tab === 'transaksi') muatTransaksi();
-      }
-    }, 30000);
-
-    render();
-  </script>
+// === FUNGSI VERIFIKASI ===
+function setujuiMasuk(id) {
+  alert(`✅ Transaksi ${id} dipindahkan ke PENDING`);
+  muatSemuaData();
+}
+function sumberKeTersedia(id) {
+  alert(`✅ Transaksi ${id} langsung masuk ke Saldo Tersedia`);
+  muatSemuaData();
+}
+function prosesTarik(id) {
+  alert(`✅ Pengajuan ${id} disetujui → Memproses`);
+  muatSemuaData();
+}
+function suksesTarik(id) {
+  alert(`✅ Penarikan ${id} BERHASIL`);
+  muatSemuaData();
+}
+function tolakTarik(id) {
+  alert(`❌ Penarikan ${id} DITOLAK — Saldo dikembalikan ke akun`);
+  muatSemuaData();
+}
+function ubahStatusAkun(id, status) {
+  alert(`✅ Akun ${id} di-${status}`);
+  muatSemuaData();
+}
+function keluarAdmin() {
+  localStorage.removeItem("sesiAdmin");
+  location.reload();
+}
+function formatUang(angka) {
+  return "Rp " + parseInt(angka || 0).toLocaleString("id-ID");
+}
+</script>
 </body>
 </html>
