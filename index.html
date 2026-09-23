@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TNXUS CLUB — Afiliasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -14,395 +14,342 @@
           colors: {
             primary: '#165DFF',
             dark: '#0F172A',
-            card: '#1E293B',
-            muted: '#94A3B8',
+            light: '#F8FAFC',
             success: '#10B981',
             warning: '#F59E0B',
             danger: '#EF4444'
           },
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+          fontFamily: { sans: ['Inter','system-ui','sans-serif'] }
         }
-      },
-      darkMode: 'class'
+      }
     }
   </script>
-  <style>
-    * { font-family: 'Inter', sans-serif; }
-    body { background: #0F172A; color: white; min-height: 100vh; padding-bottom: 80px; }
-    .page { display: none; animation: fadeIn 0.3s ease; }
-    .page.active { display: block; }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(8px)} to {opacity:1; transform:translateY(0)} }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1E293B; border-top: 1px solid #334155; z-index: 50; }
-    .bottom-nav button { flex: 1; padding: 12px 0; text-align: center; transition: all 0.2s; }
-    .bottom-nav button.active { color: #165DFF; border-top: 2px solid #165DFF; }
-    .banner-slide { animation: slide 5s infinite; }
-    @keyframes slide { 0%, 30% {opacity:1} 33%, 100% {opacity:0} }
-    input, button, select { outline: none; transition: all 0.2s; }
-    input:focus { box-shadow: 0 0 0 2px #165DFF50; }
-    .btn { @apply rounded-xl font-medium transition-all duration-200 active:scale-95; }
-    .btn-primary { @apply bg-primary hover:bg-primary/90 text-white; }
-    .btn-danger { @apply bg-danger/90 hover:bg-danger text-white; }
-    .btn-success { @apply bg-success/90 hover:bg-success text-white; }
-    .card { @apply bg-card rounded-2xl p-4 shadow-lg; }
-    .badge { @apply px-2 py-1 rounded-full text-xs font-medium; }
-    .badge-pending { @apply bg-warning/20 text-warning; }
-    .badge-success { @apply bg-success/20 text-success; }
-    .badge-danger { @apply bg-danger/20 text-danger; }
-    .modal { backdrop-filter: blur(8px); background: rgba(0,0,0,0.7); }
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto { content-visibility: auto; }
+      .page { @apply pt-4 pb-24 px-4 max-w-2xl mx-auto; }
+      .card { @apply bg-white rounded-2xl shadow-md p-4 mb-4 transition-all hover:shadow-lg; }
+      .btn { @apply px-4 py-2.5 rounded-xl font-medium transition-all active:scale-95; }
+      .btn-primary { @apply bg-primary text-white hover:bg-primary/90; }
+      .btn-success { @apply bg-success text-white hover:bg-success/90; }
+      .btn-danger { @apply bg-danger text-white hover:bg-danger/90; }
+      .btn-outline { @apply border border-primary text-primary hover:bg-primary/5; }
+      .input { @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30; }
+      .bottom-nav { @apply fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg flex justify-around py-2 z-50; }
+      .nav-item { @apply flex flex-col items-center text-gray-500 px-3 py-1.5 text-xs; }
+      .nav-item.active { @apply text-primary font-medium; }
+    }
   </style>
 </head>
-<body class="font-sans">
+<body class="bg-slate-50 font-sans text-dark min-h-screen">
+  <div id="app"></div>
   <script>
-    const API = "https://script.google.com/macros/s/AKfycbxg4_MT37XkdGT8wtFPuyBpqaeB244BX3iHdEdnsUfV-P52QwJk2rtEFSuIyTl4P8Hn/exec";
-    let session = JSON.parse(localStorage.getItem("afiliasi_session") || "null");
-    let grafik = null;
-    const SATU_BULAN = 30 * 24 * 60 * 60 * 1000;
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkzATwk2Qk6pXLZcFV0kvyaOdJ7CmNQvHRNP6P89vKMr6OEpn9h_dCqKjXGgObV5KcyQ/exec';
+    const STORAGE_KEY = 'afiliasi_session';
+    const SESSION_EXPIRE_DAY = 30;
 
+    let state = { halaman:'login', user:null, data:null };
+    let grafik = null;
+
+    // Cek sesi
     function cekSesi() {
-      if(!session) return false;
-      if(Date.now() - session.lastLogin > SATU_BULAN) {
-        localStorage.removeItem("afiliasi_session");
-        session = null;
-        tampilkanHalaman("login");
+      const sesi = localStorage.getItem(STORAGE_KEY);
+      if (!sesi) return false;
+      const {user, loginAt} = JSON.parse(sesi);
+      if (Date.now() - loginAt > SESSION_EXPIRE_DAY*86400000) {
+        localStorage.removeItem(STORAGE_KEY);
         return false;
       }
-      fetch(API+"?action=update_login&id="+encodeURIComponent(session.id));
-      session.lastLogin = Date.now();
-      simpanSesi();
+      state.user = user;
       return true;
     }
-    function simpanSesi() { localStorage.setItem("afiliasi_session", JSON.stringify(session)); }
-    function formatRupiah(n) { return Number(n).toLocaleString("id-ID", {style:"currency", currency:"IDR"}); }
 
-    async function apiCall(param) {
-      try {
-        let res = await fetch(API+"?"+new URLSearchParams(param));
-        return await res.json();
-      } catch(e) { return {status:"error", msg:"Koneksi bermasalah"}; }
+    async function api(action, param={}) {
+      const u = new URLSearchParams({action, ...param});
+      const res = await fetch(SCRIPT_URL + '?' + u);
+      return res.json();
     }
 
-    function tampilkanHalaman(id) {
-      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-      if(["beranda","saldo","akun"].includes(id)) {
-        document.querySelector(".bottom-nav").style.display = "flex";
-        document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));
-        document.querySelector(`[data-page="${id}"]`).classList.add("active");
-      } else {
-        document.querySelector(".bottom-nav").style.display = "none";
-      }
-      if(id==="beranda") muatBeranda();
-      if(id==="saldo") muatSaldo();
-      if(id==="akun") muatAkun();
+    function simpanSesi(user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({user, loginAt:Date.now()}));
+      state.user = user;
     }
 
-    // LOGIN & DAFTAR
-    document.getElementById("formLogin").addEventListener("submit", async e=>{
-      e.preventDefault();
-      let res = await apiCall({action:"login", username:e.target.username.value, password:e.target.password.value, force:"1"});
-      if(res.status==="ok") {
-        session = {id:res.id, nama:res.nama, lastLogin:Date.now()};
-        simpanSesi();
-        tampilkanHalaman("beranda");
-      } else alert(res.msg);
-    });
-    document.getElementById("formDaftar").addEventListener("submit", async e=>{
-      e.preventDefault();
-      let res = await apiCall({action:"daftar", nama:e.target.nama.value, no_hp:e.target.no_hp.value, username:e.target.username.value, password:e.target.password.value});
-      alert(res.msg);
-      e.target.reset();
-      tampilkanHalaman("login");
-    });
-
-    // BERANDA
-    async function muatBeranda() {
-      let res = await apiCall({action:"get_data", id:session.id});
-      if(res.status!=="ok") return;
-      let p = res.profil;
-      document.getElementById("saldo_utama").textContent = formatRupiah(p.saldo_tersedia);
-      document.getElementById("saldo_pending").textContent = formatRupiah(p.saldo_pending);
-      let trxContainer = document.getElementById("daftar_transaksi");
-      trxContainer.innerHTML = res.transaksi.slice(-5).reverse().map(t=>`
-        <div class="flex justify-between items-center py-3 border-b border-gray-700/50">
-          <div>
-            <div class="font-medium">${t[2]==='masuk'? '➕ Masuk' : '➖ Penarikan'}</div>
-            <div class="text-xs text-muted">${new Date(t[6]).toLocaleDateString('id-ID')}</div>
-          </div>
-          <div class="text-right">
-            <div class="font-semibold ${t[2]==='masuk'? 'text-success' : ''}">${t[2]==='masuk'? '+' : '-'}${formatRupiah(t[3])}</div>
-            <span class="badge badge-${t[4]==='disetujui'?'success':t[4]==='pending'?'pending':'danger'}">${t[4]}</span>
-          </div>
-        </div>
-      `).join("");
-      renderGrafik(res.chartData);
+    function keluar() {
+      localStorage.removeItem(STORAGE_KEY);
+      state = { halaman:'login', user:null, data:null };
+      render();
     }
 
-    function renderGrafik(data) {
-      let ctx = document.getElementById("grafik").getContext("2d");
-      if(grafik) grafik.destroy();
-      grafik = new Chart(ctx, {
-        type:"line",
-        data:{
-          labels: data.map(d=>d.tgl.slice(-2)),
-          datasets:[{label:"Pendapatan", data:data.map(d=>d.val), borderColor:"#10B981", backgroundColor:"rgba(16,185,129,0.1)", fill:true, tension:0.4}]
-        },
-        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}, ticks:{color:"#94A3B8"}}, y:{grid:{color:"#33415530"}, ticks:{color:"#94A3B8"}}}
-      });
+    // Halaman Login
+    function renderLogin() {
+      return `
+      <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+          <div class="text-center mb-8">
+            <h1 class="text-[clamp(1.5rem,4vw,2rem)] font-bold text-dark">TNXUS CLUB</h1>
+            <p class="text-gray-500 mt-1">Sistem Afiliasi Resmi</p>
+          </div>
+          <div class="card">
+            <h2 class="text-lg font-semibold mb-4">Masuk Akun</h2>
+            <div id="pesan" class="text-red-500 text-sm mb-3"></div>
+            <input type="text" id="username" placeholder="Username" class="input mb-3">
+            <input type="password" id="password" placeholder="Password" class="input mb-4">
+            <button onclick="prosesLogin()" class="btn btn-primary w-full">Masuk</button>
+            <p class="text-center mt-4 text-sm text-gray-500">
+              Belum punya akun? <a href="#" onclick="state.halaman='daftar';render()" class="text-primary font-medium">Daftar</a>
+            </p>
+          </div>
+        </div>
+      </div>`;
     }
 
-    // SALDO
-    async function muatSaldo() {
-      let res = await apiCall({action:"get_data", id:session.id});
-      if(res.status!=="ok") return;
-      let p = res.profil;
-      document.getElementById("saldo_tersedia").textContent = formatRupiah(p.saldo_tersedia);
-      document.getElementById("saldo_pending_saldo").textContent = formatRupiah(p.saldo_pending);
-      document.getElementById("riwayat_masuk").innerHTML = res.transaksi.filter(t=>t[2]==="masuk").reverse().slice(0,10).map(t=>`
-        <div class="flex justify-between py-2 border-b border-gray-700/50">
-          <div>
-            <div class="text-sm">${t[5] || 'Pendapatan'}</div>
-            <div class="text-xs text-muted">${new Date(t[6]).toLocaleDateString('id-ID')}</div>
-          </div>
-          <div class="text-right">
-            <div class="text-success font-medium">+${formatRupiah(t[3])}</div>
-            <span class="badge badge-${t[4]==='disetujui'?'success':'pending'}">${t[4]==='pending'?'Menunggu verifikasi':t[4]}</span>
-          </div>
-        </div>
-      `).join("") || "<p class='text-muted text-sm'>Belum ada data</p>";
-      document.getElementById("riwayat_keluar").innerHTML = res.penarikan.reverse().slice(0,10).map(t=>`
-        <div class="flex justify-between py-2 border-b border-gray-700/50">
-          <div>
-            <div class="text-sm">${t[3]} — ${t[4]}</div>
-            <div class="text-xs text-muted">${new Date(t[7]).toLocaleDateString('id-ID')}</div>
-          </div>
-          <div class="text-right">
-            <div class="font-medium">−${formatRupiah(t[2])}</div>
-            <span class="badge badge-${t[6]==='berhasil'?'success':t[6]==='menunggu'?'pending':'danger'}">${t[6]==='menunggu'?'Menunggu verifikasi':t[6]}</span>
-          </div>
-        </div>
-      `).join("") || "<p class='text-muted text-sm'>Belum ada penarikan</p>";
+    async function prosesLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const res = await api('login', {username, password});
+      if (!res.sukses) return document.getElementById('pesan').textContent = res.pesan;
+      simpanSesi(res.data);
+      state.halaman = 'beranda';
+      render();
     }
 
-    document.getElementById("formTarik").addEventListener("submit", async e=>{
-      e.preventDefault();
-      let nominal = parseInt(e.target.nominal.value.replace(/\D/g,''));
-      if(nominal < 50000) return alert("Minimal tarik Rp50.000");
-      if(!confirm(`Ajukan penarikan Rp${nominal.toLocaleString('id-ID')}?`)) return;
-      let res = await apiCall({
-        action:"ajukan_tarik",
-        id_afiliasi: session.id,
-        nominal: nominal,
-        metode: e.target.metode.value,
-        nomor_tujuan: e.target.nomor_tujuan.value,
-        nama_pemilik: e.target.nama_pemilik.value
-      });
-      alert(res.msg);
-      e.target.reset();
-      muatSaldo();
-    });
-
-    // AKUN
-    async function muatAkun() {
-      let res = await apiCall({action:"get_data", id:session.id});
-      if(res.status!=="ok") return;
-      let p = res.profil;
-      document.getElementById("akun_id").textContent = p.id;
-      document.getElementById("akun_nama").textContent = p.nama;
-      document.getElementById("akun_hp").textContent = p.no_hp;
+    // Halaman Daftar
+    function renderDaftar() {
+      return `
+      <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold">Daftar Afiliasi</h1>
+          </div>
+          <div class="card">
+            <div id="pesanDaftar" class="text-red-500 text-sm mb-3"></div>
+            <input type="text" id="nama" placeholder="Nama Lengkap" class="input mb-3">
+            <input type="tel" id="no_hp" placeholder="Nomor HP" class="input mb-3">
+            <input type="text" id="username" placeholder="Username" class="input mb-3">
+            <input type="password" id="password" placeholder="Password" class="input mb-4">
+            <button onclick="prosesDaftar()" class="btn btn-primary w-full">Kirim Pengajuan</button>
+            <p class="text-center mt-4 text-sm text-gray-500">
+              Sudah punya akun? <a href="#" onclick="state.halaman='login';render()" class="text-primary font-medium">Masuk</a>
+            </p>
+          </div>
+        </div>
+      </div>`;
     }
-    document.getElementById("btnLogout").addEventListener("click", ()=>{
-      localStorage.removeItem("afiliasi_session");
-      session = null;
-      tampilkanHalaman("login");
-    });
-    document.getElementById("btnHapusAkun").addEventListener("click", ()=>{
-      if(confirm("⚠️ KONFIRMASI\nApakah Anda yakin ingin MENGHAPUS AKUN SECARA PERMANEN? Tindakan ini tidak dapat dibatalkan!")) {
-        apiCall({action:"hapus_akun", id:session.id}).then(r=>{
-          alert(r.msg);
-          localStorage.removeItem("afiliasi_session");
-          session = null;
-          tampilkanHalaman("login");
-        });
-      }
-    });
 
-    // INISIALISASI
-    document.addEventListener("DOMContentLoaded", ()=>{
-      if(cekSesi()) tampilkanHalaman("beranda");
-      else tampilkanHalaman("login");
-    });
-  </script>
+    async function prosesDaftar() {
+      const nama = document.getElementById('nama').value.trim();
+      const no_hp = document.getElementById('no_hp').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const res = await api('daftar', {nama, no_hp, username, password});
+      if (!res.sukses) return document.getElementById('pesanDaftar').textContent = res.pesan;
+      alert(res.pesan);
+      state.halaman = 'login'; render();
+    }
 
-  <!-- HALAMAN LOGIN -->
-  <div id="login" class="page active px-6 py-8 max-w-md mx-auto">
-    <div class="text-center mb-8 pt-10">
-      <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">TNXUS CLUB</h1>
-      <p class="text-muted mt-2">Sistem Afiliasi Resmi</p>
-    </div>
-    <div class="card mb-4">
-      <h2 class="text-xl font-semibold mb-4">Masuk Akun</h2>
-      <form id="formLogin" class="space-y-4">
-        <div>
-          <label class="text-sm text-muted">Username</label>
-          <input name="username" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-        </div>
-        <div>
-          <label class="text-sm text-muted">Kata Sandi</label>
-          <input name="password" type="password" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-        </div>
-        <button type="submit" class="btn btn-primary w-full py-3">Masuk</button>
-      </form>
-    </div>
-    <p class="text-center text-sm text-muted">Belum punya akun? <a href="#" onclick="tampilkanHalaman('daftar')" class="text-primary">Daftar di sini</a></p>
-  </div>
-
-  <!-- HALAMAN DAFTAR -->
-  <div id="daftar" class="page px-6 py-8 max-w-md mx-auto">
-    <div class="text-center mb-8 pt-10">
-      <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">Daftar Afiliasi</h1>
-      <p class="text-muted mt-2">Bergabung & mulai menghasilkan</p>
-    </div>
-    <div class="card">
-      <form id="formDaftar" class="space-y-4">
-        <div>
-          <label class="text-sm text-muted">Nama Lengkap</label>
-          <input name="nama" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-        </div>
-        <div>
-          <label class="text-sm text-muted">Nomor HP</label>
-          <input name="no_hp" type="tel" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-        </div>
-        <div>
-          <label class="text-sm text-muted">Username</label>
-          <input name="username" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-        </div>
-        <div>
-          <label class="text-sm text-muted">Kata Sandi</label>
-          <input name="password" type="password" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-        </div>
-        <button type="submit" class="btn btn-primary w-full py-3">Ajukan Pendaftaran</button>
-      </form>
-    </div>
-    <p class="text-center text-sm text-muted mt-4">Sudah punya akun? <a href="#" onclick="tampilkanHalaman('login')" class="text-primary">Masuk</a></p>
-  </div>
-
-  <!-- HALAMAN BERANDA -->
-  <div id="beranda" class="page px-4 py-6 max-w-lg mx-auto">
-    <div class="space-y-6">
-      <!-- Banner 16:9 -->
-      <div class="relative aspect-[16/9] rounded-2xl overflow-hidden bg-primary/20">
-        <a href="#" target="_blank" class="absolute inset-0 flex items-center justify-center text-xl font-bold text-white">
-          TNXUS CLUB — FASHION
+    // Navigasi Bawah
+    function nav() {
+      return `
+      <nav class="bottom-nav">
+        <a href="#" onclick="state.halaman='beranda';render()" class="nav-item ${state.halaman==='beranda'?'active':''}">
+          <i class="fa fa-home text-lg mb-0.5"></i> Beranda
         </a>
-      </div>
-      <!-- Saldo -->
-      <div class="card">
-        <p class="text-muted text-sm">Saldo Tersedia</p>
-        <h2 id="saldo_utama" class="text-3xl font-bold mt-1">Rp0</h2>
-        <p class="text-sm text-muted mt-2">Saldo Pending: <span id="saldo_pending">Rp0</span></p>
-      </div>
-      <!-- Grafik -->
-      <div class="card">
-        <h3 class="font-semibold mb-3">Grafik Pendapatan 30 Hari</h3>
-        <canvas id="grafik" height="200"></canvas>
-      </div>
-      <!-- Riwayat Terbaru -->
-      <div class="card">
-        <h3 class="font-semibold mb-3">Transaksi Terbaru</h3>
-        <div id="daftar_transaksi"></div>
-      </div>
-    </div>
-  </div>
+        <a href="#" onclick="state.halaman='saldo';render()" class="nav-item ${state.halaman==='saldo'?'active':''}">
+          <i class="fa fa-wallet text-lg mb-0.5"></i> Saldo
+        </a>
+        <a href="#" onclick="state.halaman='akun';render()" class="nav-item ${state.halaman==='akun'?'active':''}">
+          <i class="fa fa-user text-lg mb-0.5"></i> Akun
+        </a>
+      </nav>`;
+    }
 
-  <!-- HALAMAN SALDO -->
-  <div id="saldo" class="page px-4 py-6 max-w-lg mx-auto">
-    <div class="space-y-6">
-      <div class="grid grid-cols-2 gap-4">
-        <div class="card">
-          <p class="text-muted text-sm">Saldo Tersedia</p>
-          <p id="saldo_tersedia" class="text-xl font-bold mt-1">Rp0</p>
+    // Halaman Beranda
+    async function muatBeranda() {
+      state.data = await api('getBeranda', {id_afiliasi:state.user.id_afiliasi});
+      render();
+    }
+
+    function renderBeranda() {
+      if (!state.data) muatBeranda();
+      const d = state.data?.data || {saldo:{tersedia:0,pending:0}, transaksi:[], grafik:[]};
+      return `
+      <div class="page">
+        <h2 class="text-xl font-bold mb-4">Halo, ${state.user.nama} 👋</h2>
+        <!-- Banner Slider -->
+        <div class="relative rounded-2xl overflow-hidden mb-4 bg-gray-100 aspect-[16/9]" id="banner">
+          <div class="banner-slide active" style="background:linear-gradient(135deg,#165DFF,#4080FF);">
+            <div class="p-6 text-white">
+              <h3 class="text-lg font-bold">Bangun Pendapatan Pasif</h3>
+              <p class="text-white/80 text-sm mt-1">Bagikan link, dapatkan komisi</p>
+            </div>
+          </div>
         </div>
+        <!-- Saldo Card -->
+        <div class="card bg-primary text-white">
+          <p class="text-white/70 text-sm">Saldo Tersedia</p>
+          <p class="text-2xl font-bold mt-1">Rp${Number(d.saldo?.tersedia||0).toLocaleString()}</p>
+          <p class="text-white/70 text-sm mt-2">Saldo Pending: Rp${Number(d.saldo?.pending||0).toLocaleString()}</p>
+          <button onclick="state.halaman='saldo';render()" class="mt-3 bg-white/20 hover:bg-white/30 btn text-white w-full">Tarik Saldo</button>
+        </div>
+        <!-- Grafik -->
         <div class="card">
-          <p class="text-muted text-sm">Saldo Pending</p>
-          <p id="saldo_pending_saldo" class="text-xl font-bold mt-1 text-warning">Rp0</p>
+          <h3 class="font-semibold mb-3">Pendapatan 30 Hari Terakhir</h3>
+          <canvas id="grafik" height="200"></canvas>
+        </div>
+        <!-- Riwayat -->
+        <div class="card">
+          <h3 class="font-semibold mb-3">Transaksi Terbaru</h3>
+          ${d.transaksi.length?d.transaksi.map(t=>`
+            <div class="flex justify-between py-2 border-b last:border-0">
+              <span class="${t.jenis==='masuk'?'text-success':'text-danger'}">${t.jenis==='masuk'?'+':'-'}Rp${Number(t.nominal).toLocaleString()}</span>
+              <span class="text-xs text-gray-400">${t.status}</span>
+            </div>`).join(''):'<p class="text-gray-400 text-sm">Belum ada transaksi</p>'}
         </div>
       </div>
-      <!-- Form Tarik -->
-      <div class="card">
-        <h3 class="font-semibold mb-3">Ajukan Penarikan</h3>
-        <form id="formTarik" class="space-y-3">
-          <div>
-            <label class="text-sm text-muted">Nominal (Min. Rp50.000)</label>
-            <input name="nominal" type="tel" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50" placeholder="50.000">
+      ${nav()}`;
+    }
+
+    // Halaman Saldo
+    async function muatSaldo() {
+      state.saldo = await api('getSaldo', {id_afiliasi:state.user.id_afiliasi});
+      render();
+    }
+
+    function renderSaldo() {
+      if (!state.saldo) muatSaldo();
+      const d = state.saldo?.data || {tersedia:0, pending:0, trMasuk:[], trKeluar:[]};
+      return `
+      <div class="page">
+        <h2 class="text-xl font-bold mb-4">Saldo & Penarikan</h2>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="card">
+            <p class="text-gray-500 text-sm">Tersedia</p>
+            <p class="font-bold text-lg mt-1">Rp${Number(d.tersedia||0).toLocaleString()}</p>
           </div>
-          <div>
-            <label class="text-sm text-muted">Metode</label>
-            <select name="metode" class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-              <option value="Bank">Transfer Bank</option>
-              <option value="DANA">DANA</option>
-              <option value="OVO">OVO</option>
-              <option value="Gopay">Gopay</option>
-            </select>
+          <div class="card">
+            <p class="text-gray-500 text-sm">Pending</p>
+            <p class="font-bold text-lg mt-1 text-warning">Rp${Number(d.pending||0).toLocaleString()}</p>
           </div>
-          <div>
-            <label class="text-sm text-muted">Nomor Tujuan</label>
-            <input name="nomor_tujuan" type="tel" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-          </div>
-          <div>
-            <label class="text-sm text-muted">Nama Pemilik Rekening/E-Wallet</label>
-            <input name="nama_pemilik" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
-          </div>
-          <button type="submit" class="btn btn-success w-full py-3">Ajukan Penarikan</button>
-        </form>
-      </div>
-      <!-- Riwayat -->
-      <div class="card">
-        <h3 class="font-semibold mb-3">Riwayat Saldo Masuk</h3>
-        <div id="riwayat_masuk"></div>
-      </div>
-      <div class="card">
+        </div>
+        <div class="card mb-6">
+          <h3 class="font-semibold mb-3">Ajukan Penarikan</h3>
+          <div id="pesanTarik" class="text-red-500 text-sm mb-2"></div>
+          <input type="number" id="nominal" placeholder="Nominal (Min. 50.000)" class="input mb-3">
+          <input type="text" id="bank" placeholder="Nama Bank / E-Wallet" class="input mb-3">
+          <input type="text" id="tujuan" placeholder="Nomor Tujuan" class="input mb-4">
+          <button onclick="prosesTarik()" class="btn btn-success w-full">Ajukan Penarikan</button>
+        </div>
+        <h3 class="font-semibold mb-3">Riwayat Masuk</h3>
+        <div class="card mb-4">
+          ${d.trMasuk.length?d.trMasuk.map(t=>`
+            <div class="flex justify-between py-2 border-b last:border-0">
+              <span class="text-success">+Rp${Number(t.nominal).toLocaleString()}</span>
+              <span class="text-xs text-gray-400">${t.status}</span>
+            </div>`).join(''):'<p class="text-gray-400 text-sm">Belum ada</p>'}
+        </div>
         <h3 class="font-semibold mb-3">Riwayat Penarikan</h3>
-        <div id="riwayat_keluar"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- HALAMAN AKUN -->
-  <div id="akun" class="page px-4 py-6 max-w-lg mx-auto">
-    <div class="space-y-6">
-      <div class="card text-center">
-        <div class="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
-          <i class="fa fa-user text-2xl text-primary"></i>
+        <div class="card">
+          ${d.trKeluar.length?d.trKeluar.map(t=>`
+            <div class="flex justify-between py-2 border-b last:border-0">
+              <span class="text-danger">-Rp${Number(t.nominal).toLocaleString()}</span>
+              <span class="text-xs text-gray-400">${t.status}</span>
+            </div>`).join(''):'<p class="text-gray-400 text-sm">Belum ada</p>'}
         </div>
-        <h2 id="akun_nama" class="text-xl font-bold">—</h2>
-        <p class="text-muted text-sm">ID: <span id="akun_id">—</span></p>
-        <p class="text-muted text-sm mt-1">HP: <span id="akun_hp">—</span></p>
       </div>
-      <div class="card space-y-3">
-        <div class="flex justify-between py-2 border-b border-gray-700/50">
-          <span class="text-muted">Customer Service</span>
-          <span class="font-medium">+62 8xx-xxxx-xxxx</span>
-        </div>
-        <button id="btnLogout" class="btn w-full py-3 bg-white/5 hover:bg-white/10">Keluar</button>
-        <button id="btnHapusAkun" class="btn btn-danger w-full py-3">Hapus Akun Permanen</button>
-      </div>
-    </div>
-  </div>
+      ${nav()}`;
+    }
 
-  <!-- NAVIGASI BAWAH -->
-  <nav class="bottom-nav flex justify-around">
-    <button data-page="beranda" onclick="tampilkanHalaman('beranda')" class="active">
-      <i class="fa fa-home text-lg"></i>
-      <div class="text-xs mt-1">Beranda</div>
-    </button>
-    <button data-page="saldo" onclick="tampilkanHalaman('saldo')">
-      <i class="fa fa-wallet text-lg"></i>
-      <div class="text-xs mt-1">Saldo</div>
-    </button>
-    <button data-page="akun" onclick="tampilkanHalaman('akun')">
-      <i class="fa fa-user text-lg"></i>
-      <div class="text-xs mt-1">Akun</div>
-    </button>
-  </nav>
+    async function prosesTarik() {
+      const nominal = document.getElementById('nominal').value;
+      const bank = document.getElementById('bank').value.trim();
+      const tujuan = document.getElementById('tujuan').value.trim();
+      const res = await api('ajukanTarik', {id_afiliasi:state.user.id_afiliasi, nominal, bank, norek:tujuan});
+      if (!res.sukses) return document.getElementById('pesanTarik').textContent = res.pesan;
+      alert(res.pesan); muatSaldo();
+    }
+
+    // Halaman Akun
+    async function muatAkun() {
+      state.akun = await api('getAkun', {id_afiliasi:state.user.id_afiliasi});
+      render();
+    }
+
+    function renderAkun() {
+      if (!state.akun) muatAkun();
+      const d = state.akun?.data || {};
+      return `
+      <div class="page">
+        <h2 class="text-xl font-bold mb-4">Data Akun</h2>
+        <div class="card">
+          <div class="flex justify-between py-2 border-b">
+            <span class="text-gray-500">ID Afiliasi</span>
+            <span class="font-medium">${d.id_afiliasi||'-'}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b">
+            <span class="text-gray-500">Nama</span>
+            <span class="font-medium">${d.nama||'-'}</span>
+          </div>
+          <div class="flex justify-between py-2">
+            <span class="text-gray-500">No. HP</span>
+            <span class="font-medium">${d.no_hp||'-'}</span>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <h3 class="font-semibold mb-2">Bantuan</h3>
+          <p class="text-sm text-gray-500">Customer Service: <a href="https://wa.me/628123456789" class="text-primary">Kirim Pesan WA</a></p>
+        </div>
+        <div class="mt-6 space-y-3">
+          <button onclick="keluar()" class="btn btn-outline w-full">Keluar</button>
+          <button onclick="konfirmasiHapus()" class="btn btn-danger w-full">Hapus Akun Permanen</button>
+        </div>
+      </div>
+      ${nav()}`;
+    }
+
+    async function konfirmasiHapus() {
+      if (confirm('Apakah Anda yakin ingin menghapus akun secara permanen? Tindakan ini tidak dapat dibatalkan.')) {
+        await api('hapusAkun', {id_afiliasi:state.user.id_afiliasi});
+        keluar();
+      }
+    }
+
+    // Render Utama
+    function render() {
+      const el = document.getElementById('app');
+      if (!cekSesi()) {
+        el.innerHTML = state.halaman==='daftar' ? renderDaftar() : renderLogin();
+      } else {
+        switch(state.halaman) {
+          case 'saldo': el.innerHTML = renderSaldo(); break;
+          case 'akun': el.innerHTML = renderAkun(); break;
+          default: el.innerHTML = renderBeranda();
+            setTimeout(()=>{
+              if (state.data?.data?.grafik) buatGrafik(state.data.data.grafik);
+            }, 100);
+        }
+      }
+    }
+
+    function buatGrafik(data) {
+      const ctx = document.getElementById('grafik');
+      if (!ctx) return;
+      if (grafik) grafik.destroy();
+      const lbl = Array(30).fill(0).map((_,i)=>i===29?'Hari Ini':`${30-i}h`);
+      grafik = new Chart(ctx, {
+        type:'line',
+        data:{labels:lbl, datasets:[{label:'Pendapatan', data, borderColor:'#165DFF', backgroundColor:'rgba(22,93,255,0.1)', fill:true, tension:0.4}]},
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{beginAtZero:true}}}
+      });
+    }
+
+    // Muat awal
+    render();
+    // Auto refresh tiap 30 detik
+    setInterval(()=>{
+      if (cekSesi() && state.halaman==='beranda') muatBeranda();
+      if (cekSesi() && state.halaman==='saldo') muatSaldo();
+    }, 30000);
+  </script>
 </body>
 </html>
