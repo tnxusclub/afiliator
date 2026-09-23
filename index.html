@@ -2,347 +2,407 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TNXUS CLUB - Afiliasi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TNXUS CLUB — Afiliasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#6366f1',
-            secondary: '#8b5cf6',
-            dark: '#1e1b4b',
-            light: '#eef2ff',
-            success: '#10b981',
-            warning: '#f59e0b',
-            danger: '#ef4444'
+            primary: '#165DFF',
+            dark: '#0F172A',
+            card: '#1E293B',
+            muted: '#94A3B8',
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444'
           },
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
         }
-      }
+      },
+      darkMode: 'class'
     }
   </script>
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto { content-visibility: auto; }
-      .gradient { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
-      .card-shadow { box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15); }
-      .bottom-nav { box-shadow: 0 -2px 20px rgba(0,0,0,0.08); }
-      .page { animation: fadeIn 0.3s ease-out; }
-      @keyframes fadeIn { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
-    }
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #0F172A; color: white; min-height: 100vh; padding-bottom: 80px; }
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(8px)} to {opacity:1; transform:translateY(0)} }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1E293B; border-top: 1px solid #334155; z-index: 50; }
+    .bottom-nav button { flex: 1; padding: 12px 0; text-align: center; transition: all 0.2s; }
+    .bottom-nav button.active { color: #165DFF; border-top: 2px solid #165DFF; }
+    .banner-slide { animation: slide 5s infinite; }
+    @keyframes slide { 0%, 30% {opacity:1} 33%, 100% {opacity:0} }
+    input, button, select { outline: none; transition: all 0.2s; }
+    input:focus { box-shadow: 0 0 0 2px #165DFF50; }
+    .btn { @apply rounded-xl font-medium transition-all duration-200 active:scale-95; }
+    .btn-primary { @apply bg-primary hover:bg-primary/90 text-white; }
+    .btn-danger { @apply bg-danger/90 hover:bg-danger text-white; }
+    .btn-success { @apply bg-success/90 hover:bg-success text-white; }
+    .card { @apply bg-card rounded-2xl p-4 shadow-lg; }
+    .badge { @apply px-2 py-1 rounded-full text-xs font-medium; }
+    .badge-pending { @apply bg-warning/20 text-warning; }
+    .badge-success { @apply bg-success/20 text-success; }
+    .badge-danger { @apply bg-danger/20 text-danger; }
+    .modal { backdrop-filter: blur(8px); background: rgba(0,0,0,0.7); }
   </style>
 </head>
-<body class="bg-gray-50 font-sans min-h-screen pb-20">
-  <div id="app" class="max-w-md mx-auto bg-white min-h-screen relative overflow-hidden">
-    <!-- HALAMAN LOGIN -->
-    <div id="halaman-login" class="page p-6 min-h-screen flex flex-col justify-center">
-      <div class="text-center mb-8">
-        <div class="w-20 h-20 rounded-full gradient mx-auto flex items-center justify-center mb-4">
-          <i class="fa fa-users text-white text-3xl"></i>
-        </div>
-        <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark">TNXUS CLUB</h1>
-        <p class="text-gray-500 mt-1">Sistem Afiliasi Resmi</p>
-      </div>
-      <div class="space-y-4">
-        <input type="text" id="username" placeholder="Username" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition">
-        <input type="password" id="password" placeholder="Password" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition">
-        <button onclick="login()" class="w-full gradient text-white p-3 rounded-xl font-medium hover:opacity-90 transition transform hover:scale-[1.02]">Masuk</button>
-        <p class="text-center text-gray-500">Belum punya akun? <a href="#" onclick="tampilDaftar()" class="text-primary font-medium">Daftar</a></p>
-      </div>
-    </div>
-
-    <!-- HALAMAN DAFTAR -->
-    <div id="halaman-daftar" class="page p-6 min-h-screen flex flex-col justify-center hidden">
-      <h2 class="text-2xl font-bold text-center mb-6 text-dark">Daftar Afiliasi</h2>
-      <div class="space-y-4">
-        <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full p-3 border rounded-xl">
-        <input type="tel" id="no_hp" placeholder="Nomor HP" class="w-full p-3 border rounded-xl">
-        <input type="text" id="username_baru" placeholder="Username" class="w-full p-3 border rounded-xl">
-        <input type="password" id="password_baru" placeholder="Password" class="w-full p-3 border rounded-xl">
-        <button onclick="daftar()" class="w-full gradient text-white p-3 rounded-xl font-medium">Kirim Pengajuan</button>
-        <p class="text-center"><a href="#" onclick="tampilLogin()" class="text-primary">Kembali Login</a></p>
-      </div>
-    </div>
-
-    <!-- HALAMAN BERANDA -->
-    <div id="halaman-beranda" class="page hidden">
-      <div class="gradient p-6 pb-8 rounded-b-3xl text-white">
-        <h2 class="text-xl font-bold mb-4">Selamat Datang, <span id="nama_user"></span> 👋</h2>
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
-            <p class="text-sm opacity-80">Saldo Tersedia</p>
-            <p class="text-xl font-bold" id="saldo_tersedia">Rp 0</p>
-          </div>
-          <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
-            <p class="text-sm opacity-80">Saldo Pending</p>
-            <p class="text-xl font-bold" id="saldo_pending">Rp 0</p>
-          </div>
-        </div>
-      </div>
-      <div class="p-4">
-        <div class="bg-gray-100 rounded-xl h-40 mb-4 overflow-hidden relative">
-          <div id="slider" class="flex transition-transform duration-500">
-            <img src="https://picsum.photos/id/1/800/450" class="w-full flex-shrink-0 h-40 object-cover">
-            <img src="https://picsum.photos/id/2/800/450" class="w-full flex-shrink-0 h-40 object-cover">
-            <img src="https://picsum.photos/id/3/800/450" class="w-full flex-shrink-0 h-40 object-cover">
-          </div>
-        </div>
-        <h3 class="font-bold text-lg mb-3">Riwayat Transaksi</h3>
-        <div id="riwayat" class="space-y-2">
-          <p class="text-gray-500 text-center py-4">Belum ada transaksi</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- HALAMAN SALDO -->
-    <div id="halaman-saldo" class="page hidden p-4">
-      <h2 class="text-xl font-bold mb-4 text-dark">Saldo & Penarikan</h2>
-      <div class="bg-gradient-to-r from-primary/10 to-secondary/10 p-5 rounded-2xl mb-4 card-shadow">
-        <div class="flex justify-between mb-2">
-          <span class="text-gray-600">Saldo Tersedia</span>
-          <span class="font-bold text-lg" id="saldot">Rp 0</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-gray-600">Saldo Pending</span>
-          <span class="font-bold text-warning" id="saldop">Rp 0</span>
-        </div>
-      </div>
-      <div class="bg-white border rounded-2xl p-4 mb-4">
-        <h3 class="font-semibold mb-3">Ajukan Penarikan</h3>
-        <input type="number" id="nominal_tarik" placeholder="Nominal (Min. Rp 50.000)" class="w-full p-3 border rounded-xl mb-3">
-        <select id="metode" class="w-full p-3 border rounded-xl mb-3">
-          <option value="">Pilih Metode</option>
-          <option value="DANA">DANA</option>
-          <option value="OVO">OVO</option>
-          <option value="Gopay">Gopay</option>
-          <option value="Bank BCA">Bank BCA</option>
-          <option value="Bank BRI">Bank BRI</option>
-        </select>
-        <input type="text" id="nomor_tujuan" placeholder="Nomor / Rekening Tujuan" class="w-full p-3 border rounded-xl mb-3">
-        <input type="text" id="nama_pemilik" placeholder="Nama Pemilik Akun" class="w-full p-3 border rounded-xl mb-3">
-        <button onclick="kirimPenarikan()" class="w-full gradient text-white p-3 rounded-xl font-medium">Ajukan Penarikan</button>
-      </div>
-      <h3 class="font-bold text-lg mb-2">Riwayat Penarikan</h3>
-      <div id="riwayat_penarikan" class="space-y-2">
-        <p class="text-gray-500 text-center py-3">Belum ada riwayat</p>
-      </div>
-    </div>
-
-    <!-- HALAMAN AKUN -->
-    <div id="halaman-akun" class="page hidden p-4">
-      <h2 class="text-xl font-bold mb-4 text-dark">Data Akun</h2>
-      <div class="bg-gray-50 rounded-2xl p-4 space-y-3 mb-6">
-        <div class="flex justify-between"><span class="text-gray-500">ID Afiliasi</span><span class="font-medium" id="akun_id">-</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Nama Lengkap</span><span class="font-medium" id="akun_nama">-</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">No HP</span><span class="font-medium" id="akun_hp">-</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Customer Service</span><span class="font-medium text-primary">@tnxusclub</span></div>
-      </div>
-      <div class="space-y-3">
-        <button onclick="keluar()" class="w-full p-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition">Keluar</button>
-        <button onclick="konfirmasiHapus()" class="w-full p-3 border border-danger/30 rounded-xl text-danger font-medium hover:bg-danger/5 transition">Hapus Akun Permanen</button>
-      </div>
-    </div>
-
-    <!-- NAVIGASI BAWAH -->
-    <nav id="nav_bawah" class="fixed bottom-0 left-0 right-0 bg-white bottom-nav rounded-t-3xl hidden z-50">
-      <div class="max-w-md mx-auto flex justify-around py-3">
-        <button onclick="bukaHalaman('beranda')" class="flex flex-col items-center text-primary"><i class="fa fa-home text-lg"></i><span class="text-xs mt-1">Beranda</span></button>
-        <button onclick="bukaHalaman('saldo')" class="flex flex-col items-center text-gray-400"><i class="fa fa-wallet text-lg"></i><span class="text-xs mt-1">Saldo</span></button>
-        <button onclick="bukaHalaman('akun')" class="flex flex-col items-center text-gray-400"><i class="fa fa-user text-lg"></i><span class="text-xs mt-1">Akun</span></button>
-      </div>
-    </nav>
-
-    <!-- POPUP KONFIRMASI -->
-    <div id="popup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-2xl p-6 m-4 max-w-sm w-full">
-        <h3 class="text-lg font-bold mb-3" id="popup_judul">Konfirmasi</h3>
-        <p class="mb-4" id="popup_isi"></p>
-        <div class="flex gap-3">
-          <button onclick="tutupPopup()" class="flex-1 p-2 border rounded-xl">Batal</button>
-          <button id="popup_btn_ya" class="flex-1 p-2 gradient text-white rounded-xl">Ya</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TOAST -->
-    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg z-50 transition-all duration-300 opacity-0 -translate-y-4 pointer-events-none"></div>
-  </div>
-
+<body class="font-sans">
   <script>
-    // GANTI DENGAN URL DEPLOY APPS SCRIPT KAMU
-    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxDmSVXycoRbOEylDQuFeKKivPJ3w2bhgIn6KUNQzicOOY6sxQp7Qbg1uS_0tjoOZ7q2A/exec";
-    
-    let pengguna = null;
-    let indeksSlider = 0;
-
-    cekSesi();
-    setInterval(() => {
-      if(!pengguna) return;
-      indeksSlider = (indeksSlider + 1) % 3;
-      document.getElementById('slider').style.transform = `translateX(-${indeksSlider * 100}%)`;
-    }, 4000);
+    const API = "https://script.google.com/macros/s/AKfycbxg4_MT37XkdGT8wtFPuyBpqaeB244BX3iHdEdnsUfV-P52QwJk2rtEFSuIyTl4P8Hn/exec";
+    let session = JSON.parse(localStorage.getItem("afiliasi_session") || "null");
+    let grafik = null;
+    const SATU_BULAN = 30 * 24 * 60 * 60 * 1000;
 
     function cekSesi() {
-      const simpanan = localStorage.getItem("sesi");
-      if(!simpanan) return tampilLogin();
-      const {data, waktu} = JSON.parse(simpanan);
-      if(Date.now() - waktu > 30 * 24 * 60 * 60 * 1000) {
-        localStorage.removeItem("sesi");
-        return tampilLogin();
+      if(!session) return false;
+      if(Date.now() - session.lastLogin > SATU_BULAN) {
+        localStorage.removeItem("afiliasi_session");
+        session = null;
+        tampilkanHalaman("login");
+        return false;
       }
-      pengguna = data;
-      muatData();
-      tampilBeranda();
+      fetch(API+"?action=update_login&id="+encodeURIComponent(session.id));
+      session.lastLogin = Date.now();
+      simpanSesi();
+      return true;
     }
+    function simpanSesi() { localStorage.setItem("afiliasi_session", JSON.stringify(session)); }
+    function formatRupiah(n) { return Number(n).toLocaleString("id-ID", {style:"currency", currency:"IDR"}); }
 
-    function tampilLogin() { sembunyikanSemua(); tampil('halaman-login'); sembunyikan('nav_bawah'); }
-    function tampilDaftar() { sembunyikanSemua(); tampil('halaman-daftar'); sembunyikan('nav_bawah'); }
-    function tampilBeranda() { sembunyikanSemua(); tampil('halaman-beranda'); tampil('nav_bawah'); }
-
-    function bukaHalaman(nama) {
-      sembunyikanSemua();
-      tampil(`halaman-${nama}`);
-      document.querySelectorAll('#nav_bawah button').forEach(btn => {
-        btn.classList.remove('text-primary'); btn.classList.add('text-gray-400');
-      });
-      event.target.closest('button').classList.remove('text-gray-400');
-      event.target.closest('button').classList.add('text-primary');
-      if(nama === 'saldo') muatSaldo();
-      if(nama === 'akun') muatAkun();
-    }
-
-    async function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      if(!username || !password) return tampilPesan('Isi semua kolom');
-      const res = await kirimData({aksi: 'login', username, password});
-      if(res.status === 'sukses') {
-        pengguna = res;
-        localStorage.setItem("sesi", JSON.stringify({data: res, waktu: Date.now()}));
-        muatData();
-        tampilBeranda();
-      } else tampilPesan(res.pesan || 'Login gagal');
-    }
-
-    async function daftar() {
-      const data = {
-        aksi: 'daftar',
-        nama: document.getElementById('nama').value,
-        no_hp: document.getElementById('no_hp').value,
-        username: document.getElementById('username_baru').value,
-        password: document.getElementById('password_baru').value
-      };
-      if(!data.nama || !data.no_hp || !data.username || !data.password) return tampilPesan('Lengkapi semua data');
-      const res = await kirimData(data);
-      tampilPesan(res.pesan);
-      if(res.status === 'sukses') tampilLogin();
-    }
-
-    async function muatData() {
-      document.getElementById('nama_user').textContent = pengguna.nama;
-      const res = await kirimData({aksi: 'data_beranda', id_afiliasi: pengguna.id_afiliasi});
-      if(res.status === 'sukses') {
-        document.getElementById('saldo_tersedia').textContent = formatUang(res.saldo_tersedia);
-        document.getElementById('saldo_pending').textContent = formatUang(res.saldo_pending);
-      }
-    }
-
-    async function muatSaldo() {
-      const res = await kirimData({aksi: 'data_beranda', id_afiliasi: pengguna.id_afiliasi});
-      if(res.status === 'sukses') {
-        document.getElementById('saldot').textContent = formatUang(res.saldo_tersedia);
-        document.getElementById('saldop').textContent = formatUang(res.saldo_pending);
-      }
-    }
-
-    function muatAkun() {
-      document.getElementById('akun_id').textContent = pengguna.id_afiliasi;
-      document.getElementById('akun_nama').textContent = pengguna.nama;
-      document.getElementById('akun_hp').textContent = pengguna.no_hp;
-    }
-
-    async function kirimPenarikan() {
-      const nominal = parseInt(document.getElementById('nominal_tarik').value);
-      if(nominal < 50000) return tampilPesan('Minimal penarikan Rp 50.000');
-      const data = {
-        aksi: 'ajukan_tarik',
-        id_afiliasi: pengguna.id_afiliasi,
-        nominal,
-        metode: document.getElementById('metode').value,
-        nomor_tujuan: document.getElementById('nomor_tujuan').value,
-        nama_pemilik: document.getElementById('nama_pemilik').value
-      };
-      const res = await kirimData(data);
-      tampilPesan(res.pesan);
-      if(res.status === 'sukses') {
-        document.getElementById('nominal_tarik').value = '';
-        document.getElementById('metode').value = '';
-        document.getElementById('nomor_tujuan').value = '';
-        document.getElementById('nama_pemilik').value = '';
-        muatSaldo();
-      }
-    }
-
-    function konfirmasiHapus() {
-      tampilPopup('Hapus Akun', 'Apakah Anda yakin ingin menghapus akun secara permanen? Tindakan ini tidak dapat dibatalkan.', async () => {
-        const res = await kirimData({aksi: 'hapus_akun', id_afiliasi: pengguna.id_afiliasi});
-        tutupPopup();
-        if(res.status === 'sukses') {
-          localStorage.removeItem("sesi");
-          pengguna = null;
-          tampilPesan('Akun telah dihapus');
-          tampilLogin();
-        }
-      });
-    }
-
-    function keluar() {
-      localStorage.removeItem("sesi");
-      pengguna = null;
-      tampilPesan('Berhasil keluar');
-      tampilLogin();
-    }
-
-    function tampilPopup(judul, isi, aksiYa) {
-      document.getElementById('popup_judul').textContent = judul;
-      document.getElementById('popup_isi').textContent = isi;
-      document.getElementById('popup').classList.remove('hidden');
-      document.getElementById('popup_btn_ya').onclick = aksiYa;
-    }
-
-    function tutupPopup() {
-      document.getElementById('popup').classList.add('hidden');
-    }
-
-    function tampilPesan(teks) {
-      const el = document.getElementById('toast');
-      el.textContent = teks;
-      el.classList.remove('opacity-0', '-translate-y-4');
-      setTimeout(() => el.classList.add('opacity-0', '-translate-y-4'), 3000);
-    }
-
-    function sembunyikanSemua() {
-      document.querySelectorAll('#app > div.page').forEach(el => el.classList.add('hidden'));
-    }
-    function tampil(id) { document.getElementById(id).classList.remove('hidden'); }
-    function sembunyikan(id) { document.getElementById(id).classList.add('hidden'); }
-    function formatUang(n) { return 'Rp ' + parseInt(n).toLocaleString('id-ID'); }
-    
-    async function kirimData(data) {
+    async function apiCall(param) {
       try {
-        const res = await fetch(URL_SCRIPT, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(data)
-        });
+        let res = await fetch(API+"?"+new URLSearchParams(param));
         return await res.json();
-      } catch(e) {
-        return {status: 'error', pesan: 'Koneksi gagal'};
-      }
+      } catch(e) { return {status:"error", msg:"Koneksi bermasalah"}; }
     }
+
+    function tampilkanHalaman(id) {
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      if(["beranda","saldo","akun"].includes(id)) {
+        document.querySelector(".bottom-nav").style.display = "flex";
+        document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));
+        document.querySelector(`[data-page="${id}"]`).classList.add("active");
+      } else {
+        document.querySelector(".bottom-nav").style.display = "none";
+      }
+      if(id==="beranda") muatBeranda();
+      if(id==="saldo") muatSaldo();
+      if(id==="akun") muatAkun();
+    }
+
+    // LOGIN & DAFTAR
+    document.getElementById("formLogin").addEventListener("submit", async e=>{
+      e.preventDefault();
+      let res = await apiCall({action:"login", username:e.target.username.value, password:e.target.password.value, force:"1"});
+      if(res.status==="ok") {
+        session = {id:res.id, nama:res.nama, lastLogin:Date.now()};
+        simpanSesi();
+        tampilkanHalaman("beranda");
+      } else alert(res.msg);
+    });
+    document.getElementById("formDaftar").addEventListener("submit", async e=>{
+      e.preventDefault();
+      let res = await apiCall({action:"daftar", nama:e.target.nama.value, no_hp:e.target.no_hp.value, username:e.target.username.value, password:e.target.password.value});
+      alert(res.msg);
+      e.target.reset();
+      tampilkanHalaman("login");
+    });
+
+    // BERANDA
+    async function muatBeranda() {
+      let res = await apiCall({action:"get_data", id:session.id});
+      if(res.status!=="ok") return;
+      let p = res.profil;
+      document.getElementById("saldo_utama").textContent = formatRupiah(p.saldo_tersedia);
+      document.getElementById("saldo_pending").textContent = formatRupiah(p.saldo_pending);
+      let trxContainer = document.getElementById("daftar_transaksi");
+      trxContainer.innerHTML = res.transaksi.slice(-5).reverse().map(t=>`
+        <div class="flex justify-between items-center py-3 border-b border-gray-700/50">
+          <div>
+            <div class="font-medium">${t[2]==='masuk'? '➕ Masuk' : '➖ Penarikan'}</div>
+            <div class="text-xs text-muted">${new Date(t[6]).toLocaleDateString('id-ID')}</div>
+          </div>
+          <div class="text-right">
+            <div class="font-semibold ${t[2]==='masuk'? 'text-success' : ''}">${t[2]==='masuk'? '+' : '-'}${formatRupiah(t[3])}</div>
+            <span class="badge badge-${t[4]==='disetujui'?'success':t[4]==='pending'?'pending':'danger'}">${t[4]}</span>
+          </div>
+        </div>
+      `).join("");
+      renderGrafik(res.chartData);
+    }
+
+    function renderGrafik(data) {
+      let ctx = document.getElementById("grafik").getContext("2d");
+      if(grafik) grafik.destroy();
+      grafik = new Chart(ctx, {
+        type:"line",
+        data:{
+          labels: data.map(d=>d.tgl.slice(-2)),
+          datasets:[{label:"Pendapatan", data:data.map(d=>d.val), borderColor:"#10B981", backgroundColor:"rgba(16,185,129,0.1)", fill:true, tension:0.4}]
+        },
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}, ticks:{color:"#94A3B8"}}, y:{grid:{color:"#33415530"}, ticks:{color:"#94A3B8"}}}
+      });
+    }
+
+    // SALDO
+    async function muatSaldo() {
+      let res = await apiCall({action:"get_data", id:session.id});
+      if(res.status!=="ok") return;
+      let p = res.profil;
+      document.getElementById("saldo_tersedia").textContent = formatRupiah(p.saldo_tersedia);
+      document.getElementById("saldo_pending_saldo").textContent = formatRupiah(p.saldo_pending);
+      document.getElementById("riwayat_masuk").innerHTML = res.transaksi.filter(t=>t[2]==="masuk").reverse().slice(0,10).map(t=>`
+        <div class="flex justify-between py-2 border-b border-gray-700/50">
+          <div>
+            <div class="text-sm">${t[5] || 'Pendapatan'}</div>
+            <div class="text-xs text-muted">${new Date(t[6]).toLocaleDateString('id-ID')}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-success font-medium">+${formatRupiah(t[3])}</div>
+            <span class="badge badge-${t[4]==='disetujui'?'success':'pending'}">${t[4]==='pending'?'Menunggu verifikasi':t[4]}</span>
+          </div>
+        </div>
+      `).join("") || "<p class='text-muted text-sm'>Belum ada data</p>";
+      document.getElementById("riwayat_keluar").innerHTML = res.penarikan.reverse().slice(0,10).map(t=>`
+        <div class="flex justify-between py-2 border-b border-gray-700/50">
+          <div>
+            <div class="text-sm">${t[3]} — ${t[4]}</div>
+            <div class="text-xs text-muted">${new Date(t[7]).toLocaleDateString('id-ID')}</div>
+          </div>
+          <div class="text-right">
+            <div class="font-medium">−${formatRupiah(t[2])}</div>
+            <span class="badge badge-${t[6]==='berhasil'?'success':t[6]==='menunggu'?'pending':'danger'}">${t[6]==='menunggu'?'Menunggu verifikasi':t[6]}</span>
+          </div>
+        </div>
+      `).join("") || "<p class='text-muted text-sm'>Belum ada penarikan</p>";
+    }
+
+    document.getElementById("formTarik").addEventListener("submit", async e=>{
+      e.preventDefault();
+      let nominal = parseInt(e.target.nominal.value.replace(/\D/g,''));
+      if(nominal < 50000) return alert("Minimal tarik Rp50.000");
+      if(!confirm(`Ajukan penarikan Rp${nominal.toLocaleString('id-ID')}?`)) return;
+      let res = await apiCall({
+        action:"ajukan_tarik",
+        id_afiliasi: session.id,
+        nominal: nominal,
+        metode: e.target.metode.value,
+        nomor_tujuan: e.target.nomor_tujuan.value,
+        nama_pemilik: e.target.nama_pemilik.value
+      });
+      alert(res.msg);
+      e.target.reset();
+      muatSaldo();
+    });
+
+    // AKUN
+    async function muatAkun() {
+      let res = await apiCall({action:"get_data", id:session.id});
+      if(res.status!=="ok") return;
+      let p = res.profil;
+      document.getElementById("akun_id").textContent = p.id;
+      document.getElementById("akun_nama").textContent = p.nama;
+      document.getElementById("akun_hp").textContent = p.no_hp;
+    }
+    document.getElementById("btnLogout").addEventListener("click", ()=>{
+      localStorage.removeItem("afiliasi_session");
+      session = null;
+      tampilkanHalaman("login");
+    });
+    document.getElementById("btnHapusAkun").addEventListener("click", ()=>{
+      if(confirm("⚠️ KONFIRMASI\nApakah Anda yakin ingin MENGHAPUS AKUN SECARA PERMANEN? Tindakan ini tidak dapat dibatalkan!")) {
+        apiCall({action:"hapus_akun", id:session.id}).then(r=>{
+          alert(r.msg);
+          localStorage.removeItem("afiliasi_session");
+          session = null;
+          tampilkanHalaman("login");
+        });
+      }
+    });
+
+    // INISIALISASI
+    document.addEventListener("DOMContentLoaded", ()=>{
+      if(cekSesi()) tampilkanHalaman("beranda");
+      else tampilkanHalaman("login");
+    });
   </script>
+
+  <!-- HALAMAN LOGIN -->
+  <div id="login" class="page active px-6 py-8 max-w-md mx-auto">
+    <div class="text-center mb-8 pt-10">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">TNXUS CLUB</h1>
+      <p class="text-muted mt-2">Sistem Afiliasi Resmi</p>
+    </div>
+    <div class="card mb-4">
+      <h2 class="text-xl font-semibold mb-4">Masuk Akun</h2>
+      <form id="formLogin" class="space-y-4">
+        <div>
+          <label class="text-sm text-muted">Username</label>
+          <input name="username" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+        </div>
+        <div>
+          <label class="text-sm text-muted">Kata Sandi</label>
+          <input name="password" type="password" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+        </div>
+        <button type="submit" class="btn btn-primary w-full py-3">Masuk</button>
+      </form>
+    </div>
+    <p class="text-center text-sm text-muted">Belum punya akun? <a href="#" onclick="tampilkanHalaman('daftar')" class="text-primary">Daftar di sini</a></p>
+  </div>
+
+  <!-- HALAMAN DAFTAR -->
+  <div id="daftar" class="page px-6 py-8 max-w-md mx-auto">
+    <div class="text-center mb-8 pt-10">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">Daftar Afiliasi</h1>
+      <p class="text-muted mt-2">Bergabung & mulai menghasilkan</p>
+    </div>
+    <div class="card">
+      <form id="formDaftar" class="space-y-4">
+        <div>
+          <label class="text-sm text-muted">Nama Lengkap</label>
+          <input name="nama" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+        </div>
+        <div>
+          <label class="text-sm text-muted">Nomor HP</label>
+          <input name="no_hp" type="tel" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+        </div>
+        <div>
+          <label class="text-sm text-muted">Username</label>
+          <input name="username" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+        </div>
+        <div>
+          <label class="text-sm text-muted">Kata Sandi</label>
+          <input name="password" type="password" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+        </div>
+        <button type="submit" class="btn btn-primary w-full py-3">Ajukan Pendaftaran</button>
+      </form>
+    </div>
+    <p class="text-center text-sm text-muted mt-4">Sudah punya akun? <a href="#" onclick="tampilkanHalaman('login')" class="text-primary">Masuk</a></p>
+  </div>
+
+  <!-- HALAMAN BERANDA -->
+  <div id="beranda" class="page px-4 py-6 max-w-lg mx-auto">
+    <div class="space-y-6">
+      <!-- Banner 16:9 -->
+      <div class="relative aspect-[16/9] rounded-2xl overflow-hidden bg-primary/20">
+        <a href="#" target="_blank" class="absolute inset-0 flex items-center justify-center text-xl font-bold text-white">
+          TNXUS CLUB — FASHION
+        </a>
+      </div>
+      <!-- Saldo -->
+      <div class="card">
+        <p class="text-muted text-sm">Saldo Tersedia</p>
+        <h2 id="saldo_utama" class="text-3xl font-bold mt-1">Rp0</h2>
+        <p class="text-sm text-muted mt-2">Saldo Pending: <span id="saldo_pending">Rp0</span></p>
+      </div>
+      <!-- Grafik -->
+      <div class="card">
+        <h3 class="font-semibold mb-3">Grafik Pendapatan 30 Hari</h3>
+        <canvas id="grafik" height="200"></canvas>
+      </div>
+      <!-- Riwayat Terbaru -->
+      <div class="card">
+        <h3 class="font-semibold mb-3">Transaksi Terbaru</h3>
+        <div id="daftar_transaksi"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HALAMAN SALDO -->
+  <div id="saldo" class="page px-4 py-6 max-w-lg mx-auto">
+    <div class="space-y-6">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="card">
+          <p class="text-muted text-sm">Saldo Tersedia</p>
+          <p id="saldo_tersedia" class="text-xl font-bold mt-1">Rp0</p>
+        </div>
+        <div class="card">
+          <p class="text-muted text-sm">Saldo Pending</p>
+          <p id="saldo_pending_saldo" class="text-xl font-bold mt-1 text-warning">Rp0</p>
+        </div>
+      </div>
+      <!-- Form Tarik -->
+      <div class="card">
+        <h3 class="font-semibold mb-3">Ajukan Penarikan</h3>
+        <form id="formTarik" class="space-y-3">
+          <div>
+            <label class="text-sm text-muted">Nominal (Min. Rp50.000)</label>
+            <input name="nominal" type="tel" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50" placeholder="50.000">
+          </div>
+          <div>
+            <label class="text-sm text-muted">Metode</label>
+            <select name="metode" class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+              <option value="Bank">Transfer Bank</option>
+              <option value="DANA">DANA</option>
+              <option value="OVO">OVO</option>
+              <option value="Gopay">Gopay</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm text-muted">Nomor Tujuan</label>
+            <input name="nomor_tujuan" type="tel" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+          </div>
+          <div>
+            <label class="text-sm text-muted">Nama Pemilik Rekening/E-Wallet</label>
+            <input name="nama_pemilik" type="text" required class="w-full mt-1 px-4 py-3 rounded-xl bg-white/5 border border-gray-600/50">
+          </div>
+          <button type="submit" class="btn btn-success w-full py-3">Ajukan Penarikan</button>
+        </form>
+      </div>
+      <!-- Riwayat -->
+      <div class="card">
+        <h3 class="font-semibold mb-3">Riwayat Saldo Masuk</h3>
+        <div id="riwayat_masuk"></div>
+      </div>
+      <div class="card">
+        <h3 class="font-semibold mb-3">Riwayat Penarikan</h3>
+        <div id="riwayat_keluar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HALAMAN AKUN -->
+  <div id="akun" class="page px-4 py-6 max-w-lg mx-auto">
+    <div class="space-y-6">
+      <div class="card text-center">
+        <div class="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
+          <i class="fa fa-user text-2xl text-primary"></i>
+        </div>
+        <h2 id="akun_nama" class="text-xl font-bold">—</h2>
+        <p class="text-muted text-sm">ID: <span id="akun_id">—</span></p>
+        <p class="text-muted text-sm mt-1">HP: <span id="akun_hp">—</span></p>
+      </div>
+      <div class="card space-y-3">
+        <div class="flex justify-between py-2 border-b border-gray-700/50">
+          <span class="text-muted">Customer Service</span>
+          <span class="font-medium">+62 8xx-xxxx-xxxx</span>
+        </div>
+        <button id="btnLogout" class="btn w-full py-3 bg-white/5 hover:bg-white/10">Keluar</button>
+        <button id="btnHapusAkun" class="btn btn-danger w-full py-3">Hapus Akun Permanen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGASI BAWAH -->
+  <nav class="bottom-nav flex justify-around">
+    <button data-page="beranda" onclick="tampilkanHalaman('beranda')" class="active">
+      <i class="fa fa-home text-lg"></i>
+      <div class="text-xs mt-1">Beranda</div>
+    </button>
+    <button data-page="saldo" onclick="tampilkanHalaman('saldo')">
+      <i class="fa fa-wallet text-lg"></i>
+      <div class="text-xs mt-1">Saldo</div>
+    </button>
+    <button data-page="akun" onclick="tampilkanHalaman('akun')">
+      <i class="fa fa-user text-lg"></i>
+      <div class="text-xs mt-1">Akun</div>
+    </button>
+  </nav>
 </body>
 </html>
